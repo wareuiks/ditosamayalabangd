@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>Products | Kova Store</title>
+  <link rel="icon" type="image/jpeg" href="/static/images/brand_logo.jpg">
+  <meta name="description" content="Browse digital license keys. Automated PayMongo checkout via GCash, Maya, and credit cards.">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  {% set active_page = 'products' %}
+  {% include 'partials/_header.html' %}
+
+  <div class="page-wrap">
+    <div class="container">
+
+      <div class="store-hero-row unfold-in" style="align-items: center;">
+        <div class="store-title-group">
+          <h1>Catalog</h1>
+        </div>
+
+        <div class="store-filter-bar">
+          <div class="filter-pills">
+            <button class="filter-pill active" onclick="filterCatalog('all', this)">All</button>
+            <button class="filter-pill" onclick="filterCatalog('android', this)">Android</button>
+            <button class="filter-pill" onclick="filterCatalog('ios', this)">iOS</button>
+          </div>
+
+          <div class="search-field">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="catalog-search-input" placeholder="Search keys..." oninput="filterCatalogSearch(this.value)">
+          </div>
+        </div>
+      </div>
+
+      <div id="products-catalog-container" class="products-catalog-grid">
+        <div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 40px;">
+          Loading products...
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="options-modal">
+    <div class="modal-box">
+      <button class="modal-close-btn" onclick="closeOptionsModal()">&times;</button>
+      <span style="font-size: 0.72rem; font-weight: 800; color: var(--accent-2); text-transform: uppercase; letter-spacing: 0.8px;" id="opt-modal-cat">GAMES</span>
+      <h3 style="font-size: 1.35rem; font-weight: 800; margin-bottom: 6px;" id="opt-modal-title">Select Duration Option</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">Choose a subscription duration to receive your license key immediately.</p>
+
+      <div class="options-selector-list" id="options-list"></div>
+
+      <div id="opt-voucher-wrap" style="display: none; margin-top: 12px; padding: 12px; border-radius: var(--radius-sm); background: var(--bg-subtle); border: 1px solid var(--border-card);">
+        <label class="form-label" style="margin-bottom: 6px;">Lifetime Key Voucher</label>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="opt-voucher-input" class="form-input" style="min-height: 38px; text-transform: uppercase; font-family: var(--font-mono); font-size: 0.84rem;" placeholder="KOVA-LIFE...">
+          <button type="button" class="btn btn-withdraw btn-sm" onclick="applyModalVoucher()">Apply</button>
+        </div>
+        <div id="opt-voucher-msg" style="font-size: 0.78rem; margin-top: 6px;"></div>
+      </div>
+
+      <div style="margin-top: 18px;">
+        <button id="btn-buy-option" class="btn btn-deposit btn-block btn-lg" onclick="handlePurchaseSelected()">
+          PURCHASE KEY
+        </button>
+      </div>
+
+      <div style="text-align: center; margin-top: 14px;">
+        <span style="font-size: 0.78rem; color: var(--text-dark);">
+          Need more credits? <a href="javascript:void(0)" onclick="closeOptionsModal(); openDepositModal();" style="color: var(--accent); font-weight: 700;">+ Deposit via PayMongo</a>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="key-delivery-modal">
+    <div class="modal-box" style="text-align: center;">
+      <button class="modal-close-btn" onclick="closeKeyModal()">&times;</button>
+      <div style="width: 50px; height: 50px; background: var(--success-faint); border: 1px solid var(--success); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; color: var(--success); font-size: 1.4rem;">
+        ✓
+      </div>
+      <h3 style="font-size: 1.4rem; font-weight: 800; color: #fff; margin-bottom: 4px;">Purchase Complete!</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted);" id="delivered-key-tier">VIP Access</p>
+      <div style="font-size: 0.75rem; color: var(--text-dark); margin: 6px 0 16px;" id="delivered-key-order">Order ID</div>
+
+      <div class="key-box">
+        <span id="delivered-key-text" class="key-text">OVK-XXXX-XXXX</span>
+        <button class="btn btn-deposit btn-sm" onclick="copyDeliveredKey()">Copy</button>
+      </div>
+
+      <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 20px;">
+        Your key has been saved to your dashboard. Paste it into the loader to activate access.
+      </p>
+
+      <div style="display: flex; gap: 10px;">
+        <button class="btn btn-withdraw" style="flex: 1;" onclick="closeKeyModal()">Done</button>
+        <a href="/dashboard" class="btn btn-deposit" style="flex: 1;">View Dashboard</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="lightbox-modal" id="lightbox-modal" onclick="closeImageLightbox()" style="display:none;">
+    <div class="lightbox-content" onclick="event.stopPropagation()">
+      <button type="button" class="lightbox-close" onclick="closeImageLightbox()">&times;</button>
+      <img id="lightbox-img" src="/static/images/ovk_hax.jpg" alt="Preview HD" class="lightbox-img">
+      <div id="lightbox-caption" class="lightbox-caption">In-Game Overlay Preview</div>
+    </div>
+  </div>
+
+  {% include 'partials/_modals.html' %}
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

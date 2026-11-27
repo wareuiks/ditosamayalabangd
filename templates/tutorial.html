@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>Tutorial | How To Buy Credits - Kova Store</title>
+  <link rel="icon" type="image/jpeg" href="/static/images/brand_logo.jpg">
+  <meta name="description" content="Step-by-step video tutorial on how to deposit credits via GCash and Maya, and purchase instant license keys on Kova Store.">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  {% set active_page = 'tutorial' %}
+  {% include 'partials/_header.html' %}
+
+  <div class="page-wrap">
+    <div class="container" style="max-width: 980px;">
+
+      <div class="products-header unfold-in" style="margin-bottom: 24px;">
+        <h1 class="dash-title">
+          <span class="dash-title-white">HOW TO BUY</span>
+          <span class="dash-title-white" style="color: var(--accent);">CREDITS</span>
+        </h1>
+      </div>
+
+      <div class="tutorial-video-card tilt-3d unfold-in delay-1" style="margin-bottom: 28px;">
+        <div class="tilt-glare"></div>
+        <div class="video-container-wrap">
+          <video id="tutorial-player" class="tutorial-video-element" controls playsinline preload="auto" src="/static/videos/how-to-buy.mp4">
+            <source src="/static/videos/how-to-buy.mp4" type="video/mp4">
+            Your browser does not support HTML5 video playback.
+          </video>
+        </div>
+
+        <div class="video-card-footer">
+          <div class="video-meta-details">
+            <div class="video-status-tag">
+              <i class="fa-solid fa-circle-play" style="color: var(--accent);"></i> OFFICIAL WALKTHROUGH
+            </div>
+            <h2 class="video-headline">Depositing Credits &amp; Claiming Your Key</h2>
+            <p class="video-subtext">Watch how to top up your wallet in seconds using GCash or Maya and copy your license key right away.</p>
+          </div>
+
+          <button class="btn btn-deposit" onclick="openDepositModal(100)" style="flex-shrink: 0; padding: 12px 22px; font-weight: 800;">
+            <i class="fa-solid fa-wallet"></i> + Deposit Credits Now
+          </button>
+        </div>
+      </div>
+
+      <div class="tutorial-steps-section unfold-in delay-2">
+        <div class="section-title-row" style="margin-bottom: 16px;">
+          <div class="section-title">
+            <span class="dash-kicker-bar"></span>
+            PURCHASE STEPS
+          </div>
+        </div>
+
+        <div class="steps-grid">
+          <div class="step-card tilt-3d"><div class="tilt-glare"></div>
+            <div class="step-num-pill">01</div>
+            <div class="step-icon-box"><i class="fa-solid fa-user-shield"></i></div>
+            <h3 class="step-title">Sign In</h3>
+            <p class="step-desc">Create an account or sign in so your keys and wallet balance stay tied permanently to your profile.</p>
+          </div>
+
+          <div class="step-card tilt-3d"><div class="tilt-glare"></div>
+            <div class="step-num-pill">02</div>
+            <div class="step-icon-box"><i class="fa-solid fa-credit-card"></i></div>
+            <h3 class="step-title">Choose Deposit Preset</h3>
+            <p class="step-desc">Click <strong>+ Deposit</strong> in the header or wallet card and pick the amount matching your desired tier.</p>
+          </div>
+
+          <div class="step-card tilt-3d"><div class="tilt-glare"></div>
+            <div class="step-num-pill">03</div>
+            <div class="step-icon-box"><i class="fa-solid fa-bolt"></i></div>
+            <h3 class="step-title">Pay via GCash or Maya</h3>
+            <p class="step-desc">Complete PayMongo checkout. Once paid, your wallet balance updates automatically with no manual waiting.</p>
+          </div>
+
+          <div class="step-card tilt-3d"><div class="tilt-glare"></div>
+            <div class="step-num-pill">04</div>
+            <div class="step-icon-box"><i class="fa-solid fa-key"></i></div>
+            <h3 class="step-title">Claim Your Key</h3>
+            <p class="step-desc">Select your duration (or apply a Lifetime voucher) and click <strong>1-Click Buy</strong> to get your key and loader link.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tutorial-support-card" style="margin-top: 30px; margin-bottom: 30px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+          <div>
+            <div style="font-weight: 800; font-size: 1.05rem; color: #fff; margin-bottom: 4px;">
+              <i class="fa-brands fa-telegram" style="color: var(--accent-2); margin-right: 6px;"></i> Need Help With Payment or Setup?
+            </div>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">
+              Message support on Telegram anytime for help with deposits, HWID resets, or key activation.
+            </div>
+          </div>
+          <a href="https://t.me/kovalucy" target="_blank" class="btn btn-withdraw">
+            <i class="fa-brands fa-telegram"></i> Chat on Telegram (@kovalucy)
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  {% include 'partials/_modals.html' %}
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

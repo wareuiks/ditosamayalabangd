@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>Referrals | Kova Store</title>
+  <link rel="icon" type="image/jpeg" href="/static/images/brand_logo.jpg">
+  <meta name="description" content="Invite friends and earn wallet credit on every purchase they make.">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  {% set active_page = 'referrals' %}
+  {% include 'partials/_header.html' %}
+
+  <div class="page-wrap">
+    <div class="container">
+
+      <div id="ref-disabled-banner" class="card-panel" style="display: none; padding: 14px 18px; margin-bottom: 18px; border-color: rgba(251, 191, 36, 0.35); background: rgba(251, 191, 36, 0.08);">
+        <div style="display: flex; align-items: center; gap: 10px; color: var(--warning); font-size: 0.9rem; font-weight: 600;">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <span>The referral program is currently paused by the administrator. Existing earnings remain in your wallet.</span>
+        </div>
+      </div>
+
+      <section class="shop-hero tilt-3d unfold-in" style="margin-bottom: 22px;">
+        <div class="tilt-glare"></div>
+        <div class="shop-hero-copy">
+          <p class="shop-kicker">Affiliate &amp; Referral Program</p>
+          <h1>Invite friends, earn <em id="ref-hero-percent">5%</em> for life.</h1>
+          <p class="shop-lede">Share your invite link. Whenever someone signs up with your code and buys a key, your commission goes straight to your wallet.</p>
+
+          <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 10px; background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 8px 12px; flex: 1; min-width: 240px;">
+              <span style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-weight: 700;">Link</span>
+              <input type="text" id="ref-link-input" readonly value="Loading..." style="flex: 1; background: transparent; border: none; color: #fff; font-family: var(--font-mono); font-size: 0.84rem; outline: none;">
+              <button type="button" class="btn btn-deposit btn-sm" onclick="copyRefPageLink()">
+                <i class="fa-solid fa-copy"></i> Copy Link
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="shop-hero-side" style="min-width: 190px; align-items: flex-start; gap: 6px;">
+          <span>Your Code</span>
+          <strong id="ref-code-display" style="font-family: var(--font-mono); letter-spacing: 0.08em;">--------</strong>
+          <button type="button" class="btn btn-ghost btn-sm" style="margin-top: 4px; width: 100%;" onclick="copyRefCodeOnly()">
+            <i class="fa-solid fa-hashtag"></i> Copy Code
+          </button>
+        </div>
+      </section>
+
+      <div class="grid-3 unfold-in delay-1" style="margin-bottom: 24px;">
+        <div class="stat-card tilt-3d"><div class="tilt-glare"></div>
+          <div class="stat-label">Total Earned</div>
+          <div class="stat-value" id="ref-stat-earned" style="color: var(--success);">₱0.00</div>
+        </div>
+        <div class="stat-card tilt-3d"><div class="tilt-glare"></div>
+          <div class="stat-label">Referred Users</div>
+          <div class="stat-value" id="ref-stat-count">0</div>
+        </div>
+        <div class="stat-card tilt-3d"><div class="tilt-glare"></div>
+          <div class="stat-label">Commission Rate</div>
+          <div class="stat-value" id="ref-stat-rate" style="color: var(--accent-2);">5%</div>
+        </div>
+      </div>
+
+      <div class="astrid-caps unfold-in delay-2" style="grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 28px;">
+        <div class="astrid-cap">
+          <div class="k"><i class="fa-solid fa-share-nodes"></i> Step 1 &middot; Share</div>
+          <div class="t">Send your <b>referral link or code</b> to friends on Discord, Telegram, or in-game.</div>
+        </div>
+        <div class="astrid-cap">
+          <div class="k"><i class="fa-solid fa-user-check"></i> Step 2 &middot; Sign Up</div>
+          <div class="t">They register an account with your link and stay linked to you <b>permanently</b>.</div>
+        </div>
+        <div class="astrid-cap">
+          <div class="k"><i class="fa-solid fa-coins"></i> Step 3 &middot; Earn</div>
+          <div class="t">Every order they place credits <b>instant wallet balance</b> you can spend on keys.</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <div class="section-title-row">
+            <div class="section-title"><span class="dash-kicker-bar"></span> REFERRED USERS</div>
+          </div>
+          <div class="card-panel">
+            <div class="table-wrap">
+              <table class="dash-table">
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Joined</th>
+                    <th>Orders</th>
+                    <th>Earned</th>
+                  </tr>
+                </thead>
+                <tbody id="ref-users-body">
+                  <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 28px;">Loading referrals...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-title-row">
+            <div class="section-title"><span class="dash-kicker-bar"></span> COMMISSION HISTORY</div>
+          </div>
+          <div class="card-panel">
+            <div class="table-wrap">
+              <table class="dash-table">
+                <thead>
+                  <tr>
+                    <th>Order</th>
+                    <th>Buyer</th>
+                    <th>Order Total</th>
+                    <th>Reward</th>
+                  </tr>
+                </thead>
+                <tbody id="ref-rewards-body">
+                  <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 28px;">Loading commissions...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  {% include 'partials/_modals.html' %}
+  <script src="/static/js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', loadReferralsPage);
+
+    async function loadReferralsPage() {
+      try {
+        const res = await fetch('/api/referrals');
+        if (res.status === 401) { window.location.href = '/login'; return; }
+        const data = await res.json();
+
+        document.getElementById('ref-code-display').innerText = data.code || '--------';
+        document.getElementById('ref-link-input').value = data.link || '';
+        document.getElementById('ref-hero-percent').innerText = `${data.percent || 0}%`;
+        document.getElementById('ref-stat-rate').innerText = `${data.percent || 0}%`;
+        document.getElementById('ref-stat-earned').innerText = `₱${parseFloat(data.total_earned || 0).toFixed(2)}`;
+        document.getElementById('ref-stat-count').innerText = data.referred_count || 0;
+
+        if (!data.enabled) {
+          document.getElementById('ref-disabled-banner').style.display = 'block';
+        }
+
+        const usersBody = document.getElementById('ref-users-body');
+        if (!data.referred || data.referred.length === 0) {
+          usersBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 28px;">No invited users yet. Share your link to get started!</td></tr>';
+        } else {
+          usersBody.innerHTML = data.referred.map(u => `
+            <tr>
+              <td style="font-weight: 600;">${escapeHtml(u.username)}</td>
+              <td style="color: var(--text-muted); font-size: 0.8rem;">${u.joined ? new Date(u.joined).toLocaleDateString() : '—'}</td>
+              <td style="font-family: var(--font-mono);">${u.purchases}</td>
+              <td style="font-family: var(--font-mono); color: var(--success); font-weight: 600;">₱${parseFloat(u.commission || 0).toFixed(2)}</td>
+            </tr>
+          `).join('');
+        }
+
+        const rewardsBody = document.getElementById('ref-rewards-body');
+        if (!data.rewards || data.rewards.length === 0) {
+          rewardsBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 28px;">No commissions earned yet.</td></tr>';
+        } else {
+          rewardsBody.innerHTML = data.rewards.map(r => `
+            <tr>
+              <td style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent-2);">${escapeHtml(r.order_id)}</td>
+              <td>${escapeHtml(r.referred_username)}</td>
+              <td style="font-family: var(--font-mono); color: var(--text-muted);">₱${parseFloat(r.order_amount || 0).toFixed(2)}</td>
+              <td style="font-family: var(--font-mono); color: var(--success); font-weight: 700;">+₱${parseFloat(r.reward || 0).toFixed(2)}</td>
+            </tr>
+          `).join('');
+        }
+      } catch (err) {
+        showToast('Failed to load referral stats.', 'error');
+      }
+    }
+
+    function copyRefPageLink() {
+      const val = document.getElementById('ref-link-input').value;
+      if (val) copyText(val);
+    }
+
+    function copyRefCodeOnly() {
+      const code = document.getElementById('ref-code-display').innerText;
+      if (code && code !== '--------') copyText(code);
+    }
+  </script>
+</body>
+</html>

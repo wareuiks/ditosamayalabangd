@@ -1,0 +1,48 @@
+<header class="site-header">
+  <div class="container header-container">
+    <div class="brand-cluster">
+      <a href="/dashboard" class="brand-logo">
+        <img src="/static/images/brand_logo.jpg" alt="Kova Logo" class="kova-mark-img">
+        <span class="brand-logo-text">Kova<span class="brand-sub">EDITION</span></span>
+      </a>
+    </div>
+
+    <nav class="nav-pills">
+      <div class="nav-pill-item {{ 'active' if active_page == 'dashboard' else '' }}">
+        <a href="/dashboard" class="{{ 'active' if active_page == 'dashboard' else '' }}">VAULT</a>
+      </div>
+      <div class="nav-pill-item {{ 'active' if active_page == 'products' else '' }}">
+        <a href="/products" class="{{ 'active' if active_page == 'products' else '' }}">CATALOG</a>
+      </div>
+      <div class="nav-pill-item {{ 'active' if active_page == 'referrals' else '' }}">
+        <a href="/referrals" class="{{ 'active' if active_page == 'referrals' else '' }}">AFFILIATES</a>
+      </div>
+      <div class="nav-pill-item {{ 'active' if active_page == 'tutorial' else '' }}">
+        <a href="/tutorial" class="{{ 'active' if active_page == 'tutorial' else '' }}">GUIDE</a>
+      </div>
+      <div class="nav-pill-item">
+        <a href="javascript:void(0)" onclick="openSupportModal()">SUPPORT</a>
+      </div>
+    </nav>
+
+    <div class="header-actions" id="header-actions-area">
+      {% if show_font_picker %}
+      <button class="font-selector-pill" id="font-picker-btn" onclick="toggleFontPicker(event)" title="Change Theme Font">
+        <i class="fa-solid fa-font"></i>
+        <span>Type</span>
+      </button>
+      <div class="font-picker-menu" id="font-picker-dropdown">
+        <div style="font-size: 0.7rem; font-weight: 700; color: var(--text-dark); text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 8px 8px; border-bottom: 1px solid var(--border-card); margin-bottom: 6px;">
+          Typeface
+        </div>
+        <div id="font-picker-list"></div>
+      </div>
+      {% endif %}
+      <div class="coin-pill" onclick="openDepositModal()">
+        <div class="coin-icon">₱</div>
+        <span id="nav-coin-val">0.00</span>
+      </div>
+      <button class="user-avatar-btn" id="avatar-btn" onclick="toggleUserMenu()">U</button>
+    </div>
+  </div>
+</header>

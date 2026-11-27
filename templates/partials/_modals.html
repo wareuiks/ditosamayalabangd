@@ -1,0 +1,149 @@
+<div class="modal-overlay" id="deposit-modal">
+  <div class="modal-box">
+    <button class="modal-close-btn" onclick="closeDepositModal()">&times;</button>
+    <h3 class="modal-title"><i class="fa-solid fa-bolt" style="color: var(--accent);"></i> Deposit Credits</h3>
+    <p class="modal-desc">Top up your wallet instantly via PayMongo (GCash, Maya, GrabPay, Credit/Debit Cards).</p>
+
+    <div class="form-group">
+      <label class="form-label">Select Credits to Add</label>
+      <div class="deposit-presets-grid">
+        <button class="preset-chip" data-amount="70">₱70</button>
+        <button class="preset-chip active" data-amount="100">₱100</button>
+        <button class="preset-chip" data-amount="150">₱150</button>
+        <button class="preset-chip" data-amount="200">₱200</button>
+        <button class="preset-chip" data-amount="250">₱250</button>
+        <button class="preset-chip" data-amount="320">₱320</button>
+        <button class="preset-chip" data-amount="500">₱500</button>
+        <button class="preset-chip" data-amount="700">₱700</button>
+        <button class="preset-chip" data-amount="1000">₱1000</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Selected Amount in PHP (₱)</label>
+      <input type="number" id="deposit-amt-input" class="deposit-input" value="100" readonly style="cursor: default;">
+    </div>
+
+    <button id="btn-paymongo-checkout" class="btn btn-deposit btn-block btn-lg" onclick="proceedPaymongoCheckout()">
+      <i class="fa-solid fa-credit-card"></i> Deposit via PayMongo (GCash / Maya)
+    </button>
+
+    <div class="payment-methods-strip">
+      <span class="pay-badge pay-gcash">GCash</span>
+      <span class="pay-badge pay-maya">Maya</span>
+      <span class="pay-badge pay-card">Visa / Mastercard</span>
+      <span class="pay-badge">GrabPay</span>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="change-password-modal">
+  <div class="modal-box" style="max-width: 420px;">
+    <button class="modal-close-btn" onclick="closePasswordModal()">&times;</button>
+    <h3 class="modal-title"><i class="fa-solid fa-lock" style="color: var(--accent);"></i> Change Password</h3>
+    <p class="modal-desc">Updating your password also signs out any other active browser sessions.</p>
+    <form onsubmit="submitPasswordChange(event)">
+      <div class="form-group">
+        <label class="form-label" for="cp-current">Current Password</label>
+        <input type="password" id="cp-current" class="form-input" required autocomplete="current-password">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="cp-new">New Password (min 6 chars)</label>
+        <input type="password" id="cp-new" class="form-input" required minlength="6" autocomplete="new-password">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="cp-confirm">Confirm New Password</label>
+        <input type="password" id="cp-confirm" class="form-input" required minlength="6" autocomplete="new-password">
+      </div>
+      <button type="submit" id="btn-save-password" class="btn btn-deposit btn-block">Update Password</button>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="support-modal">
+  <div class="modal-box support-modal-box">
+    <button class="modal-close-btn" onclick="closeSupportModal()">&times;</button>
+    <div class="support-modal-header">
+      <h2 class="support-main-title">Support &amp; Help</h2>
+      <p class="support-main-subtext">Get help with orders, keys, or account issues.</p>
+    </div>
+
+    <div class="support-faq-list">
+      <div class="support-faq-item open" onclick="toggleFaqItem(this)">
+        <div class="faq-item-head">
+          <div class="faq-head-left">
+            <div class="faq-icon-box icon-purple"><i class="fa-solid fa-key"></i></div>
+            <div>
+              <div class="faq-question">How do I receive my license key?</div>
+              <div class="faq-hint">Instant delivery after purchase</div>
+            </div>
+          </div>
+          <div class="faq-chevron"><i class="fa-solid fa-chevron-down"></i></div>
+        </div>
+        <div class="faq-item-body">
+          After a successful purchase, your license key appears right away on screen and is saved permanently under <strong>Recent Orders</strong> on your dashboard.
+        </div>
+      </div>
+
+      <div class="support-faq-item" onclick="toggleFaqItem(this)">
+        <div class="faq-item-head">
+          <div class="faq-head-left">
+            <div class="faq-icon-box icon-green"><i class="fa-solid fa-wallet"></i></div>
+            <div>
+              <div class="faq-question">How long does a deposit take?</div>
+              <div class="faq-hint">Deposit processing time</div>
+            </div>
+          </div>
+          <div class="faq-chevron"><i class="fa-solid fa-chevron-down"></i></div>
+        </div>
+        <div class="faq-item-body">
+          Deposits via PayMongo (GCash, Maya, and Card) are automated and credited within seconds.
+        </div>
+      </div>
+
+      <div class="support-faq-item" onclick="toggleFaqItem(this)">
+        <div class="faq-item-head">
+          <div class="faq-head-left">
+            <div class="faq-icon-box icon-red"><i class="fa-solid fa-rotate-left"></i></div>
+            <div>
+              <div class="faq-question">Can I get a refund?</div>
+              <div class="faq-hint">Refund policy</div>
+            </div>
+          </div>
+          <div class="faq-chevron"><i class="fa-solid fa-chevron-down"></i></div>
+        </div>
+        <div class="faq-item-body">
+          Because license keys are delivered immediately upon purchase, all sales are final once a key has been issued.
+        </div>
+      </div>
+
+      <div class="support-faq-item" onclick="toggleFaqItem(this)">
+        <div class="faq-item-head">
+          <div class="faq-head-left">
+            <div class="faq-icon-box icon-amber"><i class="fa-solid fa-shield-halved"></i></div>
+            <div>
+              <div class="faq-question">Is my payment secure?</div>
+              <div class="faq-hint">Security &amp; privacy</div>
+            </div>
+          </div>
+          <div class="faq-chevron"><i class="fa-solid fa-chevron-down"></i></div>
+        </div>
+        <div class="faq-item-body">
+          All payment channels are processed directly through PayMongo encrypted checkout sessions. We never see or store your payment PINs or card details.
+        </div>
+      </div>
+    </div>
+
+    <div class="support-bottom-card">
+      <div class="support-agent-icon"><i class="fa-solid fa-headset"></i></div>
+      <h3 class="support-bottom-title">Still need help?</h3>
+      <p class="support-bottom-sub">Reach out through any channel below.</p>
+      <div class="support-action-buttons">
+        <a href="https://t.me/kovalucy" target="_blank" class="btn-support-channel btn-tg"><i class="fa-brands fa-telegram"></i> Telegram</a>
+        <a href="https://t.me/ovkfiles" target="_blank" class="btn-support-channel btn-files"><i class="fa-solid fa-folder-open"></i> OVK Files</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container" class="toast-box"></div>

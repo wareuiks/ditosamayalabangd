@@ -1,0 +1,4046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>Admin Dashboard | Kova Store</title>
+  <link rel="icon" type="image/jpeg" href="/static/images/brand_logo.jpg">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root {
+      --bg-darkest: #090a09;
+      --bg-sidebar: #0c0e0c;
+      --bg-card: #111311;
+      --bg-card-subtle: #171a17;
+      --border-card: rgba(244, 242, 236, 0.085);
+      --border-subtle: rgba(244, 242, 236, 0.15);
+      --astral-purple: #d4ff33;
+      --astral-purple-hover: #e2ff66;
+      --astral-purple-bg: rgba(212, 255, 51, 0.09);
+      --astral-purple-border: rgba(212, 255, 51, 0.32);
+      --astral-purple-glow: rgba(212, 255, 51, 0.24);
+      --astral-indigo: #d4ff33;
+      --text-muted: #96948c;
+      --text-dark: #5e5d56;
+    }
+
+    .admin-shell { display: flex; min-height: 100vh; background: var(--bg-darkest); }
+
+    .admin-sidebar {
+      width: 236px;
+      flex-shrink: 0;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border-card);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; bottom: 0; left: 0;
+      z-index: 100;
+      overflow-y: auto;
+    }
+    .sidebar-brand {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border-card);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .sidebar-brand .kova-mark {
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.92rem;
+      border-radius: 6px;
+      background: #d4ff33;
+      color: #090a09;
+      box-shadow: 0 2px 0 #89a814, 0 0 18px rgba(212, 255, 51, 0.22);
+    }
+    .sidebar-brand-text {
+      font-family: var(--font-display, "Syne", sans-serif);
+      font-weight: 800; font-size: 1.04rem; color: #f4f2ec;
+      text-transform: uppercase;
+      letter-spacing: 0.01em;
+    }
+    .sidebar-brand-text span { color: var(--text-muted); font-family: var(--font-mono); font-weight: 500; font-size: 0.72rem; margin-left: 4px; }
+
+    .sidebar-section-label {
+      font-family: var(--font-mono);
+      font-size: 0.64rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.11em;
+      color: var(--text-dark);
+      padding: 18px 20px 8px;
+    }
+    .admin-nav { display: flex; flex-direction: column; gap: 3px; padding: 0 10px; }
+    .admin-nav-btn {
+      position: relative;
+      display: flex; align-items: center; gap: 10px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      border-radius: 6px;
+      padding: 9px 13px;
+      font-family: var(--font-heading);
+      font-size: 0.83rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s ease;
+    }
+    .admin-nav-btn i { width: 18px; text-align: center; font-size: 0.82rem; }
+    .admin-nav-btn:hover { background: rgba(244, 242, 236, 0.04); color: #f4f2ec; }
+    .admin-nav-btn.active {
+      background: var(--astral-purple-bg);
+      border-color: var(--astral-purple-border);
+      color: #f4f2ec;
+    }
+    .admin-nav-btn.active::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 6px;
+      bottom: 6px;
+      width: 2px;
+      border-radius: 2px;
+      background: #d4ff33;
+    }
+    .admin-nav-btn.active i { color: #d4ff33; }
+    .admin-nav-btn .nav-badge {
+      margin-left: auto;
+      font-size: 0.7rem; font-weight: 800;
+      background: rgba(255,255,255,0.06);
+      color: var(--text-dark);
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-family: var(--font-mono, monospace);
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 14px;
+      border-top: 1px solid var(--border-card);
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .sidebar-footer a, .sidebar-footer button {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.78rem; font-weight: 600;
+      color: var(--text-muted);
+      text-decoration: none;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border-card);
+      border-radius: 10px;
+      padding: 9px 12px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+    .sidebar-footer a:hover, .sidebar-footer button:hover {
+      background: rgba(255,255,255,0.05);
+      color: #f8fafc;
+    }
+    .sidebar-footer .btn-lock {
+      color: #fb7185;
+      border-color: rgba(251, 113, 133, 0.25);
+    }
+    .sidebar-footer .btn-lock:hover {
+      background: rgba(251, 113, 133, 0.1);
+    }
+
+    /* ─── MAIN CONTENT ─── */
+    .admin-main {
+      flex: 1;
+      margin-left: 236px;
+      background: var(--bg-darkest);
+      min-height: 100vh;
+    }
+    .admin-topbar {
+      padding: 18px 32px;
+      border-bottom: 1px solid var(--border-card);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-sidebar);
+    }
+    .admin-topbar h1 {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #f8fafc;
+      letter-spacing: -0.4px;
+    }
+    .admin-topbar p {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .admin-body { padding: 28px 32px; }
+
+    /* ─── CARDS & GRID ─── */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 20px;
+      padding: 20px 24px;
+    }
+    .stat-card .label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+    }
+    .stat-card .value {
+      font-size: 1.65rem;
+      font-weight: 800;
+      font-family: inherit;
+      color: #f8fafc;
+      margin-top: 6px;
+    }
+    .stat-card .value.orange { color: var(--astral-purple); }
+    .stat-card .value.red    { color: #fb7185; }
+    .stat-card .value.blue   { color: #60a5fa; }
+    .stat-card .value.green  { color: #34d399; }
+
+    .panel-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 22px;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+    .panel-card-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-card);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .panel-card-header h2 {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #f8fafc;
+    }
+    .panel-card-header h2 i { color: var(--astral-purple); margin-right: 8px; }
+    .panel-card-header p {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .panel-card-body { padding: 24px; }
+
+    /* ─── FORMS ─── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 14px;
+      align-items: end;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+      margin-bottom: 7px;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      background: #0c0e0c;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      color: #f4f2ec;
+      padding: 10px 14px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      transition: border-color 0.15s;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--astral-purple);
+    }
+    .form-group textarea {
+      font-family: var(--font-mono, monospace);
+      resize: vertical;
+      min-height: 110px;
+    }
+    .btn-submit {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: #d4ff33;
+      color: #090a09;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 18px;
+      font-family: var(--font-heading);
+      font-size: 0.84rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.14s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.14s ease, background 0.15s ease;
+      box-shadow: 0 3px 0 #89a814, 0 10px 22px -8px rgba(212, 255, 51, 0.25);
+    }
+    .btn-submit:hover { background: #e2ff66; transform: translateY(-2px); box-shadow: 0 5px 0 #89a814, 0 14px 26px -8px rgba(212, 255, 51, 0.35); }
+    .btn-submit:active { transform: translateY(2px); box-shadow: 0 1px 0 #89a814; }
+
+    .catalog-item-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 12px;
+      margin-bottom: 18px;
+      overflow: hidden;
+    }
+    .catalog-item-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--border-card);
+      flex-wrap: wrap;
+    }
+    .catalog-item-info { display: flex; align-items: center; gap: 14px; }
+    .catalog-thumb {
+      width: 64px; height: 42px;
+      border-radius: 6px;
+      object-fit: cover;
+      border: 1px solid var(--border-subtle);
+      background: #070807;
+    }
+    .order-row-clickable { cursor: pointer; }
+    .order-row-clickable:hover { background: rgba(212, 255, 51, 0.04) !important; }
+    .switch-label {
+      display: inline-flex; align-items: center; gap: 8px;
+      cursor: pointer; font-size: 0.84rem; color: #f4f2ec; font-weight: 600;
+    }
+    .switch-label input { width: 16px; height: 16px; accent-color: #d4ff33; }
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      border-radius: 10px;
+      padding: 7px 14px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,0.06); color: #f8fafc; }
+    .btn-ghost.orange { color: var(--astral-purple); border-color: var(--astral-purple-border); }
+    .btn-ghost.orange:hover { background: var(--astral-purple-bg); }
+    .btn-ghost.red { color: #fb7185; border-color: rgba(251, 113, 133, 0.3); }
+    .btn-ghost.red:hover { background: rgba(251, 113, 133, 0.08); }
+
+    /* ─── TABLES ─── */
+    .admin-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+    .admin-table thead tr {
+      text-align: left;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-dark);
+    }
+    .admin-table th { padding: 14px 18px; font-weight: 700; }
+    .admin-table td { padding: 14px 18px; color: #cbd5e1; }
+    .admin-table tbody tr { border-top: 1px solid rgba(255,255,255,0.04); }
+    .admin-table tbody tr:hover { background: rgba(255,255,255,0.015); }
+    .admin-table .mono { font-family: var(--font-mono, monospace); }
+    .admin-table .bold { font-weight: 700; color: #f8fafc; }
+    .admin-table .muted { color: var(--text-dark); }
+    .admin-table .strike { text-decoration: line-through; color: #475569; }
+
+    /* ─── PILLS / TAGS ─── */
+    .tag {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 0.72rem; font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+    .tag-stock    { background: rgba(34, 197, 94, 0.12); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.28); }
+    .tag-claimed  { background: rgba(239, 68, 68, 0.12); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.28); }
+    .tag-admin    { background: var(--astral-purple-bg); color: var(--astral-purple); border: 1px solid var(--astral-purple-border); }
+    .tag-user     { background: rgba(255,255,255,0.04); color: var(--text-dark); border: 1px solid rgba(255,255,255,0.06); }
+    .tag-add      { background: rgba(52,211,153,0.12); color: #34d399; border: 1px solid rgba(52,211,153,0.25); }
+    .tag-remove   { background: rgba(251, 113, 133, 0.1); color: #fb7185; border: 1px solid rgba(251, 113, 133, 0.25); }
+    .tag-spend    { background: rgba(251,191,36,0.12); color: #fbbf24; border: 1px solid rgba(251,191,36,0.25); }
+    .tag-debt     { background: rgba(251, 113, 133, 0.1); color: #fb7185; border: 1px solid rgba(251, 113, 133, 0.25); }
+    .tag-repay    { background: rgba(52,211,153,0.12); color: #34d399; border: 1px solid rgba(52,211,153,0.25); }
+    .tag-product  { background: var(--astral-purple-bg); color: #d4ff33; border: 1px solid var(--astral-purple-border); }
+
+    /* ─── TIER CARDS ─── */
+    .tier-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
+    .tier-card {
+      background: #0c0e0c;
+      border: 1px solid var(--border-card);
+      border-radius: 10px;
+      padding: 16px;
+      transition: border-color 0.18s ease, transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .tier-card:hover { border-color: var(--astral-purple-border); transform: translateY(-2px); }
+    .tier-card.empty { border-color: rgba(251, 113, 133, 0.25); }
+    .tier-card .tier-dur { font-size: 0.72rem; color: var(--text-muted); font-weight: 700; }
+    .tier-card .tier-price { font-size: 1.25rem; font-weight: 900; color: #f8fafc; margin: 4px 0; }
+    .tier-card .tier-stock { font-size: 0.78rem; font-weight: 700; }
+    .tier-card .tier-stock.ok { color: #f8fafc; }
+    .tier-card .tier-stock.out { color: #fb7185; }
+
+    /* ─── FILTER CHIPS ─── */
+    .chip-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+    .chip {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: 10px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .chip:hover { background: rgba(255,255,255,0.06); color: #f8fafc; }
+    .chip.active {
+      background: var(--astral-purple-bg);
+      border-color: var(--astral-purple-border);
+      color: var(--astral-purple);
+    }
+
+    /* ─── BATCH BAR ─── */
+    .batch-bar {
+      display: none;
+      padding: 10px 22px;
+      background: rgba(249,115,22,0.04);
+      border-bottom: 1px solid rgba(249,115,22,0.15);
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 0.82rem;
+    }
+
+    /* ─── MOBILE ─── */
+    @media (max-width: 860px) {
+      .admin-sidebar {
+        width: 100%; position: static; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.06);
+      }
+      .admin-main { margin-left: 0; }
+      .admin-nav { flex-direction: row; overflow-x: auto; padding: 6px 10px; }
+      .admin-nav-btn { white-space: nowrap; padding: 8px 12px; }
+      .sidebar-footer { flex-direction: row; flex-wrap: wrap; }
+      .admin-body { padding: 20px 16px; }
+      .sidebar-brand { padding: 14px 16px; }
+      .sidebar-section-label { padding: 12px 16px 6px; }
+      .astral-header-wrap { flex-direction: column; gap: 14px; align-items: flex-start !important; }
+      .astral-banner-row { flex-direction: column !important; }
+      .astral-main-grid { grid-template-columns: 1fr !important; }
+      .astral-filter-card { width: 100% !important; }
+    }
+
+    /* ─── ASTRAL VIEW STATISTICS & REVENUE STYLES ─── */
+    .astral-header-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 22px;
+      padding: 14px 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 22px;
+    }
+    .astral-breadcrumb {
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .astral-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.3px;
+    }
+    .astral-header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .astral-icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border-subtle);
+      color: #f4f2ec;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .astral-icon-btn:hover {
+      border-color: var(--astral-purple-border);
+      color: var(--astral-purple);
+    }
+    .astral-user-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border-subtle);
+      padding: 5px 16px 5px 6px;
+      border-radius: 30px;
+      cursor: pointer;
+    }
+    .astral-user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #d4ff33;
+      color: #090a09;
+      font-weight: 900;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .astral-user-name {
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: #f4f2ec;
+      line-height: 1.1;
+    }
+    .astral-user-role {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    /* Banner Row */
+    .astral-banner-row {
+      display: flex;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+    .astral-income-banner {
+      flex: 1;
+      background: linear-gradient(145deg, rgba(212, 255, 51, 0.08) 0%, rgba(23, 26, 23, 0.96) 55%, #111311 100%);
+      border: 1px solid var(--border-card);
+      border-radius: 14px;
+      padding: 28px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .astral-income-banner::before {
+      content: '';
+      position: absolute;
+      top: -40px;
+      right: 120px;
+      width: 140px;
+      height: 140px;
+      background: radial-gradient(circle, rgba(212, 255, 51, 0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .astral-banner-title {
+      font-size: 1.85rem;
+      font-weight: 800;
+      color: #f4f2ec;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+    .astral-banner-sub {
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      max-width: 480px;
+      line-height: 1.45;
+    }
+    .astral-banner-badge {
+      position: relative;
+      width: 68px;
+      height: 68px;
+      border-radius: 12px;
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--astral-purple-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--astral-purple);
+      font-size: 1.6rem;
+      flex-shrink: 0;
+      box-shadow: 0 0 25px rgba(212, 255, 51, 0.14);
+    }
+    .astral-badge-chip {
+      position: absolute;
+      bottom: -4px;
+      right: -4px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #d4ff33;
+      color: #090a09;
+      font-size: 0.72rem;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #111311;
+    }
+
+    /* Filter Card */
+    .astral-filter-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 14px;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-shrink: 0;
+    }
+    .astral-filter-col {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .astral-filter-label {
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+    .astral-date-box {
+      background: #0c0e0c;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #f4f2ec;
+      font-size: 0.82rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .astral-date-box:focus {
+      border-color: var(--astral-purple);
+    }
+    .astral-filter-btn {
+      background: #d4ff33;
+      color: #090a09;
+      border: none;
+      border-radius: 6px;
+      padding: 11px 20px;
+      font-size: 0.82rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      align-self: flex-end;
+      transition: transform 0.14s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.14s ease, background 0.15s ease;
+      font-family: var(--font-heading);
+      box-shadow: 0 3px 0 #89a814, 0 10px 22px -8px rgba(212, 255, 51, 0.25);
+    }
+    .astral-filter-btn:hover {
+      background: #e2ff66;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 0 #89a814, 0 14px 26px -8px rgba(212, 255, 51, 0.35);
+    }
+
+    /* Main Grid */
+    .astral-main-grid {
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    /* Left Column Cards */
+    .astral-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 22px;
+      padding: 24px 28px;
+      margin-bottom: 22px;
+      position: relative;
+    }
+    .astral-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+    .astral-card-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .astral-info-icon {
+      color: var(--text-dark);
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+    .astral-card-subtitle {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Total Earnings */
+    .astral-earnings-wrap {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .astral-big-number {
+      font-size: 2.3rem;
+      font-weight: 900;
+      color: #ffffff;
+      letter-spacing: -0.6px;
+      font-family: inherit;
+      margin: 4px 0 8px 0;
+    }
+    .astral-trend-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+    .astral-trend-pill.down {
+      color: #fb7185;
+      background: rgba(251, 113, 133, 0.1);
+    }
+    .astral-trend-pill.up {
+      color: #10b981;
+      background: rgba(16, 185, 129, 0.1);
+    }
+    .astral-wallet-badge {
+      width: 64px;
+      height: 64px;
+      border-radius: 12px;
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--astral-purple-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--astral-purple);
+      font-size: 1.5rem;
+      box-shadow: 0 0 20px rgba(212, 255, 51, 0.12);
+    }
+
+    /* Earnings Chart */
+    .astral-chart-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .astral-dropdown-pill {
+      background: #0c0e0c;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 6px 14px;
+      color: #f4f2ec;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      outline: none;
+      font-family: inherit;
+    }
+    .astral-view-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: #0c0e0c;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.78rem;
+      transition: all 0.15s;
+    }
+    .astral-view-btn.active {
+      color: var(--astral-purple);
+      border-color: var(--astral-purple-border);
+      background: var(--astral-purple-bg);
+    }
+
+    .astral-chart-area {
+      position: relative;
+      height: 180px;
+      margin-top: 24px;
+      display: flex;
+      align-items: flex-end;
+      padding: 0 10px 24px 44px;
+      border-bottom: 1px solid var(--border-card);
+    }
+    .astral-y-axis {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      font-size: 0.68rem;
+      color: var(--text-dark);
+      font-weight: 600;
+      padding-right: 8px;
+    }
+    .astral-y-axis-right {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      font-size: 0.68rem;
+      color: var(--text-dark);
+      font-weight: 600;
+    }
+    .astral-bars-row {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 6px;
+    }
+    .astral-bar-slot {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      position: relative;
+    }
+    .astral-bar {
+      width: 14px;
+      min-height: 4px;
+      border-radius: 6px;
+      background: var(--astral-purple);
+      transition: height 0.3s ease, transform 0.15s ease, filter 0.15s ease;
+      cursor: pointer;
+    }
+    .astral-bar:hover {
+      transform: scaleY(1.05);
+      filter: brightness(1.2);
+    }
+    .astral-bar.highlight {
+      background: var(--astral-purple-hover);
+      box-shadow: 0 0 14px var(--astral-purple-glow);
+    }
+    .astral-bar-tooltip {
+      position: absolute;
+      top: -30px;
+      background: #0c0e0c;
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 2px 7px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #f4f2ec;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      z-index: 10;
+    }
+    .astral-bar-slot:hover .astral-bar-tooltip {
+      opacity: 1;
+    }
+    .astral-x-axis {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 10px 0 44px;
+      font-size: 0.68rem;
+      color: var(--text-dark);
+      font-weight: 600;
+    }
+
+    /* Right Column - Sales Breakdown */
+    .astral-breakdown-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 22px;
+      padding: 26px 28px;
+    }
+    .astral-sb-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+    }
+    .astral-sb-table th {
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: var(--text-dark);
+      padding-bottom: 14px;
+      text-transform: capitalize;
+    }
+    .astral-sb-table th:first-child { text-align: left; }
+    .astral-sb-table th:nth-child(2) { text-align: center; }
+    .astral-sb-table th:last-child { text-align: right; }
+
+    .astral-sb-row {
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+      transition: background 0.15s ease;
+    }
+    .astral-sb-row:hover {
+      background: rgba(255, 255, 255, 0.015);
+    }
+    .astral-sb-row td {
+      padding: 16px 0;
+      vertical-align: middle;
+    }
+    .astral-item-cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .astral-item-icon-box {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--astral-purple-border);
+      color: var(--astral-purple);
+    }
+    .astral-item-name {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #f1f5f9;
+    }
+    .astral-sold-cell {
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .astral-amount-cell {
+      text-align: right;
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: #ffffff;
+      font-family: inherit;
+    }
+
+    .astral-sb-footer {
+      border-top: 1px solid var(--border-subtle);
+    }
+    .astral-sb-footer td {
+      padding: 20px 0 8px 0;
+      font-size: 0.92rem;
+    }
+    .astral-sb-footer .total-label {
+      font-weight: 800;
+      color: #ffffff;
+    }
+    .astral-sb-footer .total-sold {
+      text-align: center;
+      font-weight: 800;
+      color: #ffffff;
+    }
+    .astral-sb-footer .total-amount {
+      text-align: right;
+      font-weight: 900;
+      font-size: 1.15rem;
+      color: var(--astral-purple);
+    }
+
+    /* ─── HIDE HEADER / PAGE-WRAP FROM BASE CSS ─── */
+    .site-header, .page-wrap { display: none !important; }
+  </style>
+</head>
+<body>
+
+<div class="admin-shell">
+
+  <!-- ═══════ SIDEBAR ═══════ -->
+  <aside class="admin-sidebar">
+    <a href="/admin" class="sidebar-brand">
+      <img src="/static/images/brand_logo.jpg" alt="Kova Logo" class="kova-mark-img">
+      <span class="sidebar-brand-text">Kova <span>Admin</span></span>
+    </a>
+
+    <div class="sidebar-section-label">Dashboard</div>
+    <nav class="admin-nav">
+      <button type="button" class="admin-nav-btn active" data-tab="overview" onclick="showTab('overview')">
+        <i class="fa-solid fa-gauge-high"></i> Overview
+      </button>
+      <button type="button" class="admin-nav-btn" data-tab="stock" onclick="showTab('stock')">
+        <i class="fa-solid fa-key"></i> Stock &amp; Keys
+      </button>
+      <button type="button" class="admin-nav-btn" data-tab="products" onclick="showTab('products')">
+        <i class="fa-solid fa-boxes-stacked"></i> Products
+      </button>
+      <button type="button" class="admin-nav-btn" data-tab="vouchers" onclick="showTab('vouchers')">
+        <i class="fa-solid fa-ticket"></i> Vouchers
+      </button>
+      <button type="button" class="admin-nav-btn" data-tab="orders" onclick="showTab('orders')">
+        <i class="fa-solid fa-receipt"></i> Orders
+      </button>
+      <button type="button" class="admin-nav-btn" data-tab="customers" onclick="showTab('customers')">
+        <i class="fa-solid fa-users"></i> Customers
+      </button>
+    </nav>
+
+    <div class="sidebar-section-label">Finance</div>
+    <nav class="admin-nav">
+      <button type="button" class="admin-nav-btn" data-tab="funds" onclick="showTab('funds')">
+        <i class="fa-solid fa-wallet"></i> Funds
+      </button>
+      <button type="button" class="admin-nav-btn" data-tab="revenue" onclick="showTab('revenue')">
+        <i class="fa-solid fa-chart-line"></i> Revenue
+      </button>
+      <button type="button" class="admin-nav-btn" data-tab="ledger" onclick="showTab('ledger')">
+        <i class="fa-solid fa-book"></i> Ledger
+      </button>
+      <button type="button" class="admin-nav-btn" data-tab="referrals" onclick="showTab('referrals')">
+        <i class="fa-solid fa-share-nodes"></i> Referrals
+      </button>
+    </nav>
+
+    <div class="sidebar-section-label">System</div>
+    <nav class="admin-nav">
+      <button type="button" class="admin-nav-btn" data-tab="security" onclick="showTab('security')">
+        <i class="fa-solid fa-shield-halved"></i> Security
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="/products"><i class="fa-solid fa-arrow-left"></i> Storefront</a>
+      <a href="/dashboard"><i class="fa-solid fa-grid-2"></i> User Panel</a>
+      <button class="btn-lock" onclick="lockAdminSession()"><i class="fa-solid fa-lock"></i> Lock Admin</button>
+    </div>
+  </aside>
+
+  <!-- ═══════ MAIN ═══════ -->
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div>
+        <h1 id="topbar-title">Overview</h1>
+        <p id="topbar-desc">Your shop at a glance.</p>
+      </div>
+      <button class="btn-ghost" onclick="refreshCurrentTab()"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+    </div>
+
+    <div class="admin-body">
+
+      <!-- ════════════════════ OVERVIEW ════════════════════ -->
+      <section id="panel-overview" class="admin-tab-panel">
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="label">Available Keys</div>
+            <div class="value orange" id="stat-keys">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Claimed / Sold</div>
+            <div class="value red" id="stat-used-keys">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Total Revenue</div>
+            <div class="value" id="stat-revenue">₱0.00</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Total Orders</div>
+            <div class="value blue" id="stat-orders">0</div>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <div>
+              <h2><i class="fa-solid fa-boxes-stacked"></i> Tier Stock Status</h2>
+              <p>Live inventory per tier. Keys auto-deduct on purchase.</p>
+            </div>
+          </div>
+          <div class="panel-card-body">
+            <div class="tier-grid" id="tier-stock-cards"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════ STOCK & KEYS ════════════════════ -->
+      <section id="panel-stock" class="admin-tab-panel" style="display:none;">
+        <!-- Add Keys -->
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <div>
+              <h2><i class="fa-solid fa-file-import"></i> Add Keys to Stock</h2>
+              <p>Select a tier and paste real keys (one per line). These get handed out on purchase.</p>
+            </div>
+          </div>
+          <div class="panel-card-body">
+            <form onsubmit="handleImportKeys(event)">
+              <div class="form-grid" style="margin-bottom: 14px;">
+                <div class="form-group">
+                  <label>Product Tier</label>
+                  <select id="key-product-select" required>
+                    <option value="">Loading tiers...</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group" style="margin-bottom: 14px;">
+                <label>License Keys (1 per line)</label>
+                <textarea id="key-bulk-textarea" placeholder="OVK-3D-ABCD-1234&#10;OVK-3D-EFGH-5678" required></textarea>
+              </div>
+              <button type="submit" class="btn-submit" id="btn-import-keys" style="width:100%;">
+                <i class="fa-solid fa-plus"></i> Add Keys to Stock
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Key inventory -->
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <div>
+              <h2><i class="fa-solid fa-key"></i> Key Inventory</h2>
+              <p>All keys — available and claimed.</p>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+              <input type="text" id="admin-key-search" placeholder="Search key, product, user..." oninput="debounceKeySearch(this.value)" style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-card); border-radius: 8px; padding: 6px 12px; font-size: 0.8rem; color: #f8fafc; outline: none; width: 190px;">
+              <div class="chip-bar">
+                <button class="chip active" id="btn-filter-all" onclick="filterKeys('all')">All</button>
+                <button class="chip" id="btn-filter-available" onclick="filterKeys('available')">In Stock</button>
+                <button class="chip" id="btn-filter-used" onclick="filterKeys('used')">Claimed</button>
+              </div>
+              <button class="btn-ghost orange" onclick="bringBackAllKeys()"><i class="fa-solid fa-rotate-left"></i> Restock All</button>
+            </div>
+          </div>
+
+          <!-- Batch actions -->
+          <div class="batch-bar" id="batch-key-actions-bar">
+            <div style="display: flex; align-items: center; gap: 10px; font-weight: 700;">
+              <span style="color: var(--astral-purple);"><i class="fa-solid fa-check-double" style="margin-right:4px;"></i><span id="selected-keys-count">0</span> selected</span>
+              <button class="btn-ghost" onclick="clearSelectedKeys()" style="padding:3px 8px; font-size:0.7rem;">Deselect</button>
+            </div>
+            <button class="btn-ghost red" onclick="deleteSelectedKeys()"><i class="fa-solid fa-trash"></i> Delete Selected</button>
+          </div>
+
+          <div style="overflow-x: auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th style="width:40px; text-align:center;">
+                    <input type="checkbox" id="check-all-keys" onchange="toggleSelectAllKeys(this)" style="cursor:pointer; accent-color:var(--astral-purple); width:15px; height:15px;">
+                  </th>
+                  <th>ID</th>
+                  <th>Product / Tier</th>
+                  <th>License Key</th>
+                  <th>Status</th>
+                  <th>Given To</th>
+                  <th style="text-align:right;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="admin-keys-tbody">
+                <tr><td colspan="7" style="padding:28px; text-align:center; color:var(--text-dark);">Loading keys...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════ CUSTOMERS ════════════════════ -->
+      <section id="panel-customers" class="admin-tab-panel" style="display:none;">
+        
+        <!-- Customer Subtabs -->
+        <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;">
+          <div class="chip-bar" style="background: rgba(255,255,255,0.03); padding: 4px; border-radius: 12px; border: 1px solid var(--border-card);">
+            <button type="button" class="chip active" id="btn-custtab-purchases" onclick="switchCustTab('purchases')" style="font-size: 0.82rem; padding: 7px 14px;">
+              <i class="fa-solid fa-receipt" style="margin-right: 5px;"></i> Key Purchases (<span id="cust-count-purchases">0</span>)
+            </button>
+            <button type="button" class="chip" id="btn-custtab-deposits" onclick="switchCustTab('deposits')" style="font-size: 0.82rem; padding: 7px 14px;">
+              <i class="fa-solid fa-money-bill-transfer" style="margin-right: 5px;"></i> Added Funds (<span id="cust-count-deposits">0</span>)
+            </button>
+            <button type="button" class="chip" id="btn-custtab-directory" onclick="switchCustTab('directory')" style="font-size: 0.82rem; padding: 7px 14px;">
+              <i class="fa-solid fa-users" style="margin-right: 5px;"></i> Customer Directory (<span id="cust-count-users">0</span>)
+            </button>
+          </div>
+        </div>
+
+        <!-- ── SUBPANEL 1: Key Purchases ── -->
+        <div id="custpanel-purchases">
+          <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 18px;">
+            <div class="stat-card">
+              <div class="label">Keys Sold & Delivered</div>
+              <div class="value" id="stat-cust-purchases-cnt" style="color: var(--astral-purple);">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Total Key Orders Revenue</div>
+              <div class="value green" id="stat-cust-purchases-val">₱0.00</div>
+            </div>
+          </div>
+
+          <div class="panel-card">
+            <div class="panel-card-header">
+              <div>
+                <h2><i class="fa-solid fa-receipt"></i> Customer Key Purchases</h2>
+                <p>Real-time delivery log: see which customer bought which key and when.</p>
+              </div>
+              <div>
+                <input type="text" id="cust-search-purchases" placeholder="Filter by customer, key, order #..." oninput="renderCustomerPurchases()" style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-card); border-radius: 8px; padding: 6px 12px; font-size: 0.8rem; color: #f8fafc; outline: none; width: 230px;">
+              </div>
+            </div>
+            <div style="overflow-x: auto;">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Date / Time</th>
+                    <th>Customer</th>
+                    <th>Product</th>
+                    <th>Delivered Key</th>
+                    <th>Price</th>
+                    <th>Order Reference</th>
+                  </tr>
+                </thead>
+                <tbody id="cust-purchases-tbody">
+                  <tr><td colspan="6" style="padding:28px; text-align:center; color:var(--text-dark);">Loading purchases...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── SUBPANEL 2: Added Funds / Top-ups ── -->
+        <div id="custpanel-deposits" style="display:none;">
+          <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 18px;">
+            <div class="stat-card">
+              <div class="label">Completed Deposits</div>
+              <div class="value green" id="stat-cust-deposits-cnt">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Total Funds Added</div>
+              <div class="value green" id="stat-cust-deposits-val">₱0.00</div>
+            </div>
+          </div>
+
+          <div class="panel-card">
+            <div class="panel-card-header">
+              <div>
+                <h2><i class="fa-solid fa-money-bill-transfer"></i> Customer Added Funds</h2>
+                <p>Log of user wallet deposits, GCash/PayMongo payments, and top-ups.</p>
+              </div>
+              <div>
+                <input type="text" id="cust-search-deposits" placeholder="Filter by customer, ref, method..." oninput="renderCustomerDeposits()" style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-card); border-radius: 8px; padding: 6px 12px; font-size: 0.8rem; color: #f8fafc; outline: none; width: 230px;">
+              </div>
+            </div>
+            <div style="overflow-x: auto;">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Date / Time</th>
+                    <th>Customer</th>
+                    <th>Amount Added</th>
+                    <th>Payment Method / Details</th>
+                    <th>Reference</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="cust-deposits-tbody">
+                  <tr><td colspan="6" style="padding:28px; text-align:center; color:var(--text-dark);">Loading deposits...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── SUBPANEL 3: Customer Accounts Directory & Balance Adjustment ── -->
+        <div id="custpanel-directory" style="display:none;">
+          <div class="panel-card">
+            <div class="panel-card-header">
+              <div>
+                <h2><i class="fa-solid fa-users"></i> Registered Customer Directory</h2>
+                <p>All registered accounts and current wallet balances.</p>
+              </div>
+            </div>
+            <div style="overflow-x: auto;">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Balance</th>
+                    <th>Role / Status</th>
+                    <th>Joined</th>
+                    <th style="text-align:right;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-users-tbody">
+                  <tr><td colspan="7" style="padding:28px; text-align:center; color:var(--text-dark);">Loading customers...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Balance Adjustment -->
+          <div class="panel-card" style="margin-top: 18px;">
+            <div class="panel-card-header">
+              <div>
+                <h2><i class="fa-solid fa-wallet"></i> Manual Balance Adjustment</h2>
+                <p>Credit or debit a customer's wallet (e.g. offline GCash receipts).</p>
+              </div>
+            </div>
+            <div class="panel-card-body">
+              <form onsubmit="handleAdjustBalance(event)">
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label>Customer</label>
+                    <select id="adj-user-id" required>
+                      <option value="">Loading users...</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Amount (PHP)</label>
+                    <input type="number" id="adj-amount" step="1" placeholder="e.g. 100 or -50" required>
+                  </div>
+                  <div class="form-group">
+                    <label>Reason</label>
+                    <input type="text" id="adj-reason" value="Admin Manual Credit">
+                  </div>
+                  <div class="form-group">
+                    <label>&nbsp;</label>
+                    <button type="submit" class="btn-submit" id="btn-adjust-submit" style="width:100%;">
+                      <i class="fa-solid fa-check"></i> Apply
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════ FUNDS ════════════════════ -->
+      <section id="panel-funds" class="admin-tab-panel" style="display:none;">
+        <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+          <div class="stat-card">
+            <div class="label">Current Funds Balance</div>
+            <div class="value orange" id="funds-balance">₱0.00</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Total Added</div>
+            <div class="value green" id="funds-total-added">₱0.00</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Total Removed</div>
+            <div class="value red" id="funds-total-removed">₱0.00</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Customer Deposits Total</div>
+            <div class="value green" id="funds-cust-deposits-val">₱0.00</div>
+          </div>
+        </div>
+
+        <!-- Add / Remove Funds Form with Searchable Customer Selector -->
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <div>
+              <h2><i class="fa-solid fa-plus-minus"></i> Add / Remove Funds</h2>
+              <p>Search a customer username to credit or debit their wallet directly, or record a general shop fund adjustment.</p>
+            </div>
+          </div>
+          <div class="panel-card-body">
+            <form onsubmit="saveFundAdjustment(event)">
+              <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+                
+                <!-- Searchable Customer Selector -->
+                <div class="form-group" style="grid-column: span 2;">
+                  <label style="display:flex; justify-content:space-between; align-items:center;">
+                    <span><i class="fa-solid fa-user" style="margin-right:4px;"></i> Select Customer (Search Username)</span>
+                    <span id="funds-clear-user-btn" style="display:none; cursor:pointer; color:var(--text-muted); font-size:0.75rem;" onclick="clearFundUserSelect()">
+                      <i class="fa-solid fa-xmark"></i> Clear user
+                    </span>
+                  </label>
+                  <div style="display: flex; gap: 8px;">
+                    <input type="text" id="funds-user-search" placeholder="Type username to search..." oninput="filterFundUsers(this.value)" autocomplete="off" style="flex:1;">
+                    <select id="funds-user-id" onchange="onFundUserSelect(this.value)" style="flex:2;">
+                      <option value="">-- General / No Customer Selected --</option>
+                    </select>
+                  </div>
+                  <!-- Selected User Badge -->
+                  <div id="funds-selected-user-badge" style="display:none; margin-top:8px; font-size:0.8rem; color:#d4ff33; background:rgba(212,255,51,0.09); padding:6px 12px; border-radius:6px; border:1px solid rgba(212,255,51,0.3);">
+                    <i class="fa-solid fa-circle-check" style="color:#4ade80; margin-right:4px;"></i> Selected: <strong id="funds-badge-username" style="color:#f4f2ec;">@username</strong> &bull; Current Wallet Balance: <strong id="funds-badge-balance" style="color:#34d399;">₱0.00</strong>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label>Action</label>
+                  <select id="funds-type">
+                    <option value="add">➕ Add Funds (Credit)</option>
+                    <option value="remove">➖ Remove Funds (Debit)</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label>Amount (PHP)</label>
+                  <input id="funds-amount" type="number" min="0.01" step="0.01" placeholder="0.00" required>
+                </div>
+
+                <div class="form-group" style="grid-column: span 2;">
+                  <label>Note / Reason (optional)</label>
+                  <input id="funds-note" type="text" maxlength="240" placeholder="e.g. GCash receipt ref, bonus, chargeback, or shop deposit">
+                </div>
+
+                <div class="form-group" style="display:flex; align-items:flex-end;">
+                  <button class="btn-submit" type="submit" id="btn-funds-submit" style="width:100%; height:42px;">
+                    <i class="fa-solid fa-bolt"></i> Apply Funds
+                  </button>
+                </div>
+
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Customer Added Funds Table (Who added funds) -->
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <div>
+              <h2><i class="fa-solid fa-money-bill-transfer"></i> Customers Who Added Funds</h2>
+              <p>Every wallet deposit, GCash, PayMongo payment, and top-up from customers.</p>
+            </div>
+            <div>
+              <input type="text" id="funds-dep-search" placeholder="Filter customer deposits..." oninput="renderFundsCustomerDeposits()" style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-card); border-radius: 8px; padding: 6px 12px; font-size: 0.8rem; color: #f8fafc; outline: none; width: 220px;">
+            </div>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>When</th>
+                  <th>Customer</th>
+                  <th>Amount Added</th>
+                  <th>Payment Details</th>
+                  <th>Reference</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="funds-customer-deposits-rows">
+                <tr><td colspan="6" style="padding:24px; text-align:center; color:var(--text-dark);">Loading customer deposits...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Admin Fund History (Audit Trail) -->
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <div>
+              <h2><i class="fa-solid fa-clock-rotate-left"></i> Admin Fund Adjustments</h2>
+              <p>Audit log of all manual credits, debits, and adjustments made by administrators.</p>
+            </div>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>When</th>
+                  <th>Admin (who)</th>
+                  <th>Target Customer</th>
+                  <th>Type</th>
+                  <th>Amount</th>
+                  <th>Note</th>
+                </tr>
+              </thead>
+              <tbody id="funds-rows">
+                <tr><td colspan="6" style="padding:24px; text-align:center; color:var(--text-dark);">Loading adjustments...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════ REVENUE (ASTRAL VIEW STATISTICS) ════════════════════ -->
+      <section id="panel-revenue" class="admin-tab-panel" style="display:none;">
+        <!-- Astral Header Card -->
+        <div class="astral-header-card">
+          <div style="display:flex; align-items:center; gap:14px;">
+            <div class="astral-icon-btn"><i class="fa-solid fa-bars-staggered"></i></div>
+            <div>
+              <div class="astral-breadcrumb">PAGES / WORKSPACE</div>
+              <div class="astral-title">View Statistics</div>
+            </div>
+          </div>
+          <div class="astral-header-right">
+            <button type="button" class="astral-icon-btn" title="Notifications"><i class="fa-regular fa-bell"></i></button>
+            <button type="button" class="astral-icon-btn" title="Settings"><i class="fa-solid fa-gear"></i></button>
+            <div class="astral-user-pill">
+              <div class="astral-user-avatar">A</div>
+              <div>
+                <div class="astral-user-name">Astral</div>
+                <div class="astral-user-role">Owner</div>
+              </div>
+              <i class="fa-solid fa-chevron-down" style="font-size:0.65rem; color:#64748b; margin-left:4px;"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Banner & Filter Row -->
+        <div class="astral-banner-row">
+          <div class="astral-income-banner">
+            <div>
+              <div class="astral-banner-title">Income Overview</div>
+              <div class="astral-banner-sub">Track payouts, income, and sales performance from one owner-only workspace.</div>
+            </div>
+            <div class="astral-banner-badge">
+              <i class="fa-solid fa-chart-line"></i>
+              <div class="astral-badge-chip">₱</div>
+            </div>
+          </div>
+
+          <div class="astral-filter-card">
+            <div class="astral-filter-col">
+              <label class="astral-filter-label">FROM</label>
+              <input type="date" id="rev-from-date" class="astral-date-box">
+            </div>
+            <div class="astral-filter-col">
+              <label class="astral-filter-label">TO</label>
+              <input type="date" id="rev-to-date" class="astral-date-box">
+            </div>
+            <button type="button" class="astral-filter-btn" onclick="applyRevenueFilter()">
+              <i class="fa-solid fa-filter"></i> Filter
+            </button>
+            <div style="display:flex; flex-direction:column; gap:4px; margin-left:6px;">
+              <button type="button" class="btn-ghost" style="padding:4px 9px; font-size:0.7rem;" onclick="setRevenuePreset('this_month')">This Month</button>
+              <button type="button" class="btn-ghost" style="padding:4px 9px; font-size:0.7rem;" onclick="setRevenuePreset('all_time')">All Time</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Two-Column Grid -->
+        <div class="astral-main-grid">
+          <!-- Left Column -->
+          <div>
+            <!-- Total Earnings Card -->
+            <div class="astral-card">
+              <div class="astral-card-header">
+                <div class="astral-card-title">
+                  Total Earnings <i class="fa-solid fa-circle-info astral-info-icon" title="Net earnings in this period"></i>
+                </div>
+              </div>
+              <div class="astral-earnings-wrap">
+                <div>
+                  <div class="astral-big-number" id="astral-total-earnings">₱0.00</div>
+                  <div class="astral-trend-pill down" id="astral-trend-pill">
+                    <i class="fa-solid fa-arrow-down" id="astral-trend-icon"></i>
+                    <span id="astral-trend-text">0.0% vs previous period</span>
+                  </div>
+                </div>
+                <div class="astral-wallet-badge">
+                  <i class="fa-solid fa-wallet"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- Earnings Over Time Card -->
+            <div class="astral-card">
+              <div class="astral-card-header">
+                <div>
+                  <div class="astral-card-title">
+                    Earnings Over Time <i class="fa-solid fa-circle-info astral-info-icon" title="Daily or monthly earnings trend"></i>
+                  </div>
+                  <div class="astral-card-subtitle" id="astral-date-range-sub">Oct 1, 2026 – Oct 31, 2026</div>
+                </div>
+                <div class="astral-chart-controls">
+                  <select id="astral-interval-select" class="astral-dropdown-pill" onchange="applyRevenueFilter()">
+                    <option value="daily">Daily</option>
+                    <option value="monthly">Monthly</option>
+                  </select>
+                  <button type="button" class="astral-view-btn active" id="btn-chart-bar" onclick="setChartType('bar')">
+                    <i class="fa-solid fa-chart-simple"></i>
+                  </button>
+                  <button type="button" class="astral-view-btn" id="btn-chart-line" onclick="setChartType('line')">
+                    <i class="fa-solid fa-chart-line"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Bar Chart Area -->
+              <div class="astral-chart-area" id="astral-chart-container">
+                <div class="astral-y-axis">
+                  <span id="astral-y-max">₱2,200</span>
+                  <span>₱0</span>
+                </div>
+                <div class="astral-bars-row" id="astral-bars-row">
+                  <!-- Populated dynamically via JS -->
+                </div>
+                <div class="astral-y-axis-right">
+                  <span>₱0</span>
+                </div>
+              </div>
+              <div class="astral-x-axis" id="astral-x-axis">
+                <!-- Populated dynamically via JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Sales Breakdown Card -->
+          <div class="astral-breakdown-card">
+            <div class="astral-card-title" style="font-size: 1.15rem; color: #ffffff; font-weight: 800;">
+              Sales Breakdown
+            </div>
+            <div class="astral-card-subtitle" style="margin-top: 4px; font-size: 0.8rem;" id="astral-payouts-subtitle">
+              0 payouts in this period
+            </div>
+
+            <table class="astral-sb-table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Sold</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- 1. Source Code -->
+                <tr class="astral-sb-row">
+                  <td>
+                    <div class="astral-item-cell">
+                      <div class="astral-item-icon-box purple">
+                        <i class="fa-solid fa-code"></i>
+                      </div>
+                      <span class="astral-item-name">Source Code</span>
+                    </div>
+                  </td>
+                  <td class="astral-sold-cell" id="sb-source-sold">0 sold</td>
+                  <td class="astral-amount-cell" id="sb-source-amount">₱0.00</td>
+                </tr>
+
+                <!-- 2. Kova Android -->
+                <tr class="astral-sb-row">
+                  <td>
+                    <div class="astral-item-cell">
+                      <div class="astral-item-icon-box teal">
+                        <i class="fa-brands fa-android"></i>
+                      </div>
+                      <span class="astral-item-name">Kova Android</span>
+                    </div>
+                  </td>
+                  <td class="astral-sold-cell" id="sb-android-sold">0 sold</td>
+                  <td class="astral-amount-cell" id="sb-android-amount">₱0.00</td>
+                </tr>
+
+                <!-- 3. Cloud iOS -->
+                <tr class="astral-sb-row">
+                  <td>
+                    <div class="astral-item-cell">
+                      <div class="astral-item-icon-box blue">
+                        <i class="fa-brands fa-apple"></i>
+                      </div>
+                      <span class="astral-item-name">Cloud iOS</span>
+                    </div>
+                  </td>
+                  <td class="astral-sold-cell" id="sb-ios-sold">0 sold</td>
+                  <td class="astral-amount-cell" id="sb-ios-amount">₱0.00</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr class="astral-sb-footer">
+                  <td class="total-label">Total</td>
+                  <td class="total-sold" id="sb-total-sold">0</td>
+                  <td class="total-amount" id="sb-total-amount">₱0.00</td>
+                </tr>
+              </tfoot>
+            </table>
+
+            <!-- All-time Monthly Record -->
+            <div style="margin-top: 26px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.06);">
+              <div style="font-size: 0.72rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 0.5px;">
+                <i class="fa-solid fa-calendar-days" style="margin-right: 6px;"></i> All-Time Monthly Record
+              </div>
+              <div id="astral-monthly-mini-list" style="display:flex; flex-direction:column; gap:8px;">
+                <!-- Populated via JS -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════ LEDGER ════════════════════ -->
+      <section id="panel-ledger" class="admin-tab-panel" style="display:none;">
+        <div class="stat-grid" id="books-totals"></div>
+
+        <!-- Log a line -->
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <div>
+              <h2><i class="fa-solid fa-pen"></i> Log a Line / Direct Sale</h2>
+              <p>Track spends, debts, or log direct sales for Cloud iOS, Kova Android, and Source Code.</p>
+            </div>
+          </div>
+          <div class="panel-card-body">
+            <form onsubmit="saveBookLine(event)">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Type</label>
+                  <select id="book-type">
+                    <option value="direct_sale" selected>🛍️ Direct Sale (Offline Buyer)</option>
+                    <option value="spend">💸 Spend</option>
+                    <option value="added">💰 Added Money</option>
+                    <option value="debt">🔴 Debt</option>
+                    <option value="repay">🟢 Debt Payment</option>
+                  </select>
+                </div>
+                <div class="form-group" id="book-cat-group">
+                  <label>Product (Category)</label>
+                  <select id="book-category">
+                    <option value="Cloud iOS">🍎 Cloud iOS</option>
+                    <option value="Kova Android" selected>🤖 Kova Android</option>
+                    <option value="Source Code">💻 Source Code</option>
+                    <option value="general">📁 General / None</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Amount (PHP)</label>
+                  <input id="book-amount" type="number" min="0.01" step="0.01" placeholder="0.00" required>
+                </div>
+                <div class="form-group">
+                  <label>Date</label>
+                  <input id="book-date" type="date" required>
+                </div>
+                <div class="form-group">
+                  <label>Note / Buyer</label>
+                  <input id="book-note" type="text" maxlength="240" placeholder="e.g. Direct GCash from Jake">
+                </div>
+                <div class="form-group">
+                  <label>&nbsp;</label>
+                  <button class="btn-submit" type="submit" style="width:100%;"><i class="fa-solid fa-check"></i> Save</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Monthly Summary -->
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <h2><i class="fa-solid fa-calendar-days"></i> Monthly Summary</h2>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Month</th>
+                  <th>Sales</th>
+                  <th>Came In</th>
+                  <th>Spends</th>
+                  <th>Added</th>
+                  <th>Debt</th>
+                  <th>Left</th>
+                </tr>
+              </thead>
+              <tbody id="books-months"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- All Entries -->
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <h2><i class="fa-solid fa-list"></i> All Entries</h2>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Category</th>
+                  <th>Amount</th>
+                  <th>Note</th>
+                  <th style="text-align:right;"></th>
+                </tr>
+              </thead>
+              <tbody id="books-lines"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="panel-security" class="admin-tab-panel" style="display:none;">
+        <div class="stat-grid" id="security-counts"></div>
+
+        <div class="grid-2" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(360px,1fr)); gap:20px; margin-bottom:24px;">
+          <div class="panel-card" style="margin-bottom:0;">
+            <div class="panel-card-header">
+              <div>
+                <h2><i class="fa-solid fa-ban"></i> IP Blocklist</h2>
+                <p>Block abusive or brute-force IP addresses across the storefront and APIs.</p>
+              </div>
+            </div>
+            <div class="panel-card-body" style="border-bottom:1px solid var(--border-card);">
+              <form class="form-grid" style="grid-template-columns: 1fr 1.2fr auto;" onsubmit="handleBlockIp(event)">
+                <div class="form-group">
+                  <label>IP Address</label>
+                  <input type="text" id="sec-block-ip" required placeholder="e.g. 203.0.113.42">
+                </div>
+                <div class="form-group">
+                  <label>Reason</label>
+                  <input type="text" id="sec-block-reason" placeholder="Scanner / brute force">
+                </div>
+                <div class="form-group">
+                  <button type="submit" class="btn-submit"><i class="fa-solid fa-gavel"></i> Block IP</button>
+                </div>
+              </form>
+            </div>
+            <div style="overflow-x:auto; max-height:260px;">
+              <table class="admin-table">
+                <thead><tr><th>IP</th><th>Reason</th><th>By</th><th style="text-align:right;"></th></tr></thead>
+                <tbody id="blocked-ips-rows"><tr><td colspan="4" style="padding:18px; color:var(--text-muted);">No blocked IPs.</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel-card" style="margin-bottom:0;">
+            <div class="panel-card-header">
+              <div>
+                <h2><i class="fa-solid fa-clipboard-list"></i> Admin Audit Trail</h2>
+                <p>Every sensitive admin change recorded with actor and IP.</p>
+              </div>
+            </div>
+            <div style="overflow-x:auto; max-height:360px;">
+              <table class="admin-table">
+                <thead><tr><th>When</th><th>Admin</th><th>Action</th><th>Target / Detail</th></tr></thead>
+                <tbody id="audit-log-rows"><tr><td colspan="4" style="padding:18px; color:var(--text-muted);">Loading audit log...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <h2><i class="fa-solid fa-shield-halved"></i> Recent Security Events</h2>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>When</th>
+                  <th>Address</th>
+                  <th>Kind</th>
+                  <th>Path</th>
+                  <th>Detail</th>
+                  <th style="text-align:right;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="security-rows"><tr><td colspan="6" style="padding:24px;">Loading attempts...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="panel-vouchers" class="admin-tab-panel" style="display:none;">
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="label">Active Vouchers</div>
+            <div class="value orange" id="vstat-active">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Total Redemptions</div>
+            <div class="value blue" id="vstat-used">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Total Discounted</div>
+            <div class="value green" id="vstat-saved">₱0.00</div>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <div>
+              <h2><i class="fa-solid fa-bolt"></i> Quick 1-Click Lifetime Vouchers</h2>
+              <p>Instantly mint a single-use Lifetime key discount code and copy it to your clipboard.</p>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button type="button" class="btn-submit" onclick="quickGenerateLifetimeVoucher(20)">
+                <i class="fa-solid fa-ticket"></i> + 20% Lifetime
+              </button>
+              <button type="button" class="btn-submit" onclick="quickGenerateLifetimeVoucher(50)">
+                <i class="fa-solid fa-ticket"></i> + 50% Lifetime
+              </button>
+              <button type="button" class="btn-submit" onclick="quickGenerateLifetimeVoucher(65)">
+                <i class="fa-solid fa-ticket"></i> + 65% Lifetime
+              </button>
+            </div>
+          </div>
+
+          <div class="panel-card-body">
+            <form onsubmit="createCustomVoucher(event)">
+              <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+                <div class="form-group">
+                  <label>Discount Tier</label>
+                  <select id="vc-percent">
+                    <option value="20">20% OFF (₱700 → ₱560)</option>
+                    <option value="50">50% OFF (₱700 → ₱350)</option>
+                    <option value="65">65% OFF (₱700 → ₱245)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Applies To</label>
+                  <select id="vc-scope">
+                    <option value="lifetime">Lifetime Keys Only</option>
+                    <option value="all">All Product Tiers</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Custom Code (blank = auto)</label>
+                  <input type="text" id="vc-code" placeholder="e.g. VIP65" style="text-transform:uppercase; font-family:var(--font-mono);">
+                </div>
+                <div class="form-group">
+                  <label>Max Redemptions (0 = ∞)</label>
+                  <input type="number" id="vc-max-uses" min="0" value="1">
+                </div>
+                <div class="form-group">
+                  <label>Batch Count</label>
+                  <input type="number" id="vc-count" min="1" max="50" value="1">
+                </div>
+                <div class="form-group">
+                  <label>Expires On (optional)</label>
+                  <input type="date" id="vc-expires">
+                </div>
+                <div class="form-group">
+                  <label>Note (optional)</label>
+                  <input type="text" id="vc-note" placeholder="VIP giveaway / promo">
+                </div>
+                <div class="form-group">
+                  <button type="submit" class="btn-submit" style="width:100%;"><i class="fa-solid fa-plus"></i> Create Voucher</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <div>
+              <h2><i class="fa-solid fa-ticket"></i> Voucher Inventory</h2>
+              <p>Click any code to copy it. Pause or delete codes anytime.</p>
+            </div>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Discount</th>
+                  <th>Scope</th>
+                  <th>Uses</th>
+                  <th>Expires</th>
+                  <th>Note</th>
+                  <th>Status</th>
+                  <th style="text-align:right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-vouchers-tbody">
+                <tr><td colspan="8" style="padding:24px; text-align:center;">Loading vouchers...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <div><h2><i class="fa-solid fa-clock-rotate-left"></i> Recent Voucher Redemptions</h2></div>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>When</th>
+                  <th>Customer</th>
+                  <th>Voucher</th>
+                  <th>Order ID</th>
+                  <th>Original</th>
+                  <th>Saved</th>
+                  <th>Paid</th>
+                </tr>
+              </thead>
+              <tbody id="admin-voucher-usages-tbody">
+                <tr><td colspan="7" style="padding:24px; text-align:center;">No redemptions yet.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════ PRODUCTS ════════════════════ -->
+      <section id="panel-products" class="admin-tab-panel" style="display:none;">
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <div>
+              <h2><i class="fa-solid fa-boxes-stacked"></i> Catalog &amp; Tier Management</h2>
+              <p>Create, edit, or archive storefront products, pricing tiers, images, and feature checklists.</p>
+            </div>
+            <button type="button" class="btn-submit" onclick="openCatalogModal()">
+              <i class="fa-solid fa-plus"></i> New Product
+            </button>
+          </div>
+          <div class="panel-card-body" id="admin-products-list">
+            <div style="text-align:center; padding:32px; color:var(--text-muted);">Loading catalog...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════ ORDERS ════════════════════ -->
+      <section id="panel-orders" class="admin-tab-panel" style="display:none;">
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <div>
+              <h2><i class="fa-solid fa-receipt"></i> Orders Explorer</h2>
+              <p>Search orders by ID, customer username, email, or license key. Click any row for full details.</p>
+            </div>
+            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+              <span class="chip accent" id="orders-summary-count">0 orders</span>
+              <span class="chip success" id="orders-summary-revenue">₱0.00</span>
+            </div>
+          </div>
+
+          <div class="panel-card-body" style="border-bottom:1px solid var(--border-card); padding-bottom:18px;">
+            <div class="form-grid" style="grid-template-columns: 1.6fr 1.1fr 0.9fr 0.9fr auto;">
+              <div class="form-group">
+                <label>Search</label>
+                <input type="text" id="orders-search" placeholder="Order ID, username, email, key..." oninput="onOrdersSearchInput()">
+              </div>
+              <div class="form-group">
+                <label>Tier / Product</label>
+                <select id="orders-product-filter" onchange="loadOrders(1)">
+                  <option value="all">All tiers</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>From Date</label>
+                <input type="date" id="orders-date-from" onchange="loadOrders(1)">
+              </div>
+              <div class="form-group">
+                <label>To Date</label>
+                <input type="date" id="orders-date-to" onchange="loadOrders(1)">
+              </div>
+              <div class="form-group">
+                <button type="button" class="btn-ghost" onclick="resetOrdersFilters()" style="height:40px;">Reset</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="overflow-x:auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Product</th>
+                  <th>Price</th>
+                  <th>License Key</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody id="admin-orders-tbody">
+                <tr><td colspan="6" style="padding:24px; text-align:center;">Loading orders...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="panel-card-body" style="display:flex; align-items:center; justify-content:space-between; border-top:1px solid var(--border-card); padding:14px 22px;">
+            <span id="orders-page-info" style="font-size:0.82rem; color:var(--text-muted);">Page 1 of 1</span>
+            <div style="display:flex; gap:8px;">
+              <button type="button" class="btn-ghost" id="orders-prev-btn" onclick="changeOrdersPage(-1)">Prev</button>
+              <button type="button" class="btn-ghost" id="orders-next-btn" onclick="changeOrdersPage(1)">Next</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════ REFERRALS ════════════════════ -->
+      <section id="panel-referrals" class="admin-tab-panel" style="display:none;">
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="label">Total Paid Out</div>
+            <div class="value green" id="adm-ref-total-paid">₱0.00</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Referred Users</div>
+            <div class="value blue" id="adm-ref-referred-users">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Active Referrers</div>
+            <div class="value orange" id="adm-ref-active-referrers">0</div>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <div>
+              <h2><i class="fa-solid fa-sliders"></i> Referral Settings</h2>
+              <p>Control whether users earn wallet commissions from referred purchases and set the percentage (0–50%).</p>
+            </div>
+          </div>
+          <div class="panel-card-body">
+            <form class="form-grid" style="grid-template-columns: auto 180px auto; justify-content: start; gap: 20px;" onsubmit="saveReferralSettings(event)">
+              <div class="form-group" style="margin-bottom:0; align-self:center;">
+                <label class="switch-label">
+                  <input type="checkbox" id="adm-ref-enabled" checked>
+                  <span>Referral Program Enabled</span>
+                </label>
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label>Commission (%)</label>
+                <input type="number" id="adm-ref-percent" min="0" max="50" step="0.5" value="5" required>
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <button type="submit" class="btn-submit"><i class="fa-solid fa-check"></i> Save Settings</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="grid-2" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:20px;">
+          <div class="panel-card">
+            <div class="panel-card-header">
+              <div><h2><i class="fa-solid fa-trophy"></i> Top Referrers</h2></div>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="admin-table">
+                <thead><tr><th>User</th><th>Code</th><th>Invited</th><th>Earned</th></tr></thead>
+                <tbody id="adm-ref-top-tbody"><tr><td colspan="4" style="padding:20px;">Loading...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel-card">
+            <div class="panel-card-header">
+              <div><h2><i class="fa-solid fa-coins"></i> Recent Commissions</h2></div>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="admin-table">
+                <thead><tr><th>Order</th><th>Referrer</th><th>Buyer</th><th>Reward</th></tr></thead>
+                <tbody id="adm-ref-rewards-tbody"><tr><td colspan="4" style="padding:20px;">Loading...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /admin-body -->
+  </main>
+</div><!-- /admin-shell -->
+
+<!-- ─── MODAL: CATALOG PRODUCT ─── -->
+<div class="modal-overlay" id="catalog-modal">
+  <div class="modal-box" style="max-width:520px;">
+    <button type="button" class="modal-close-btn" onclick="closeCatalogModal()">&times;</button>
+    <h3 class="modal-title" id="catalog-modal-title">New Product</h3>
+    <p class="modal-desc">Configure storefront catalog item details and cover image.</p>
+    <form onsubmit="saveCatalogItem(event)">
+      <input type="hidden" id="cat-edit-id">
+      <div class="form-group">
+        <label>Title</label>
+        <input type="text" id="cat-title" required placeholder="e.g. Kova Premium - CODM">
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label>Category</label>
+          <input type="text" id="cat-category" value="GAMES" placeholder="GAMES">
+        </div>
+        <div class="form-group">
+          <label>Platform</label>
+          <input type="text" id="cat-platform" value="ANDROID" placeholder="ANDROID / IOS">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Cover Image URL (or upload below)</label>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input type="text" id="cat-image-url" value="/static/images/product1.jpg" oninput="updateCatImgPreview(this.value)">
+          <label class="btn-ghost" style="cursor:pointer; margin:0; white-space:nowrap;">
+            <i class="fa-solid fa-upload"></i> Upload
+            <input type="file" id="cat-image-file" accept="image/*" style="display:none;" onchange="uploadCatalogImage(this)">
+          </label>
+        </div>
+        <img id="cat-image-preview" src="/static/images/product1.jpg" alt="Preview" style="margin-top:10px; width:100%; height:120px; object-fit:cover; border-radius:10px; border:1px solid var(--border-subtle);" onerror="this.style.display='none'">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="cat-description" style="min-height:80px; font-family:inherit;" placeholder="Short product overview..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="switch-label">
+          <input type="checkbox" id="cat-active" checked>
+          <span>Active (visible in storefront)</span>
+        </label>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+        <button type="button" class="btn-ghost" onclick="closeCatalogModal()">Cancel</button>
+        <button type="submit" class="btn-submit" id="btn-save-catalog">Save Product</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ─── MODAL: PRODUCT TIER ─── -->
+<div class="modal-overlay" id="tier-modal">
+  <div class="modal-box" style="max-width:500px;">
+    <button type="button" class="modal-close-btn" onclick="closeTierModal()">&times;</button>
+    <h3 class="modal-title" id="tier-modal-title">Add Tier</h3>
+    <p class="modal-desc">Set duration, price, badge, and feature list for this tier.</p>
+    <form onsubmit="saveTierItem(event)">
+      <input type="hidden" id="tier-edit-id">
+      <input type="hidden" id="tier-catalog-id">
+      <div class="form-group">
+        <label>Tier Name</label>
+        <input type="text" id="tier-name" required placeholder="e.g. OVK Premium - 7 DAYS">
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label>Duration</label>
+          <input type="text" id="tier-duration" required placeholder="e.g. 7 DAYS">
+        </div>
+        <div class="form-group">
+          <label>Price (₱)</label>
+          <input type="number" id="tier-price" step="0.01" min="1" required placeholder="100">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Badge (optional)</label>
+        <input type="text" id="tier-badge" placeholder="Popular / Best Seller">
+      </div>
+      <div class="form-group">
+        <label>Features (one per line)</label>
+        <textarea id="tier-features" style="min-height:90px;" placeholder="7 Days Access&#10;Instant Key Delivery"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="switch-label">
+          <input type="checkbox" id="tier-active" checked>
+          <span>Active (purchasable)</span>
+        </label>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+        <button type="button" class="btn-ghost" onclick="closeTierModal()">Cancel</button>
+        <button type="submit" class="btn-submit" id="btn-save-tier">Save Tier</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ─── SLIDE-OVER DRAWER: ORDER DETAIL ─── -->
+<div class="drawer-backdrop" id="order-drawer-backdrop" onclick="closeOrderDrawer()"></div>
+<aside class="drawer" id="order-drawer" aria-label="Order details">
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; padding-bottom:14px; border-bottom:1px solid var(--border-card);">
+    <div>
+      <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted); font-weight:700;">Order Detail</div>
+      <h3 id="drawer-order-id" style="font-family:var(--font-mono); font-size:1.1rem; color:#fff; margin-top:2px;">—</h3>
+    </div>
+    <button type="button" class="modal-close-btn" style="position:static;" onclick="closeOrderDrawer()">&times;</button>
+  </div>
+  <div id="order-drawer-body" style="display:flex; flex-direction:column; gap:16px;">
+    <div style="color:var(--text-muted);">Select an order to inspect.</div>
+  </div>
+</aside>
+
+<div id="toast-container" class="toast-box"></div>
+
+<script src="/static/js/app.js"></script>
+<script>
+  let currentKeyFilter = 'all';
+  let currentTab = 'overview';
+
+  const TAB_META = {
+    overview:  { title: 'Overview',      desc: 'Your shop at a glance.' },
+    stock:     { title: 'Stock & Keys',  desc: 'Manage license key inventory.' },
+    products:  { title: 'Products',      desc: 'Create and edit storefront products, tiers, and images.' },
+    vouchers:  { title: 'Vouchers',      desc: 'Create 20%, 50%, and 65% discount vouchers for Lifetime keys.' },
+    orders:    { title: 'Orders',        desc: 'Search orders, filter by product/date, and inspect keys.' },
+    customers: { title: 'Customers',     desc: 'Registered users and balance adjustments.' },
+    funds:     { title: 'Funds',         desc: 'Cash added and removed from the shop.' },
+    revenue:   { title: 'Revenue',       desc: 'How much money came through, month by month.' },
+    ledger:    { title: 'Ledger',        desc: 'Log and track spends, added money, and debts.' },
+    referrals: { title: 'Referrals',     desc: 'Commission rate, top referrers, and referral payouts.' },
+    security:  { title: 'Security',      desc: 'Failed logins, gate attempts, and scanners.' }
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const bookDate = document.getElementById('book-date');
+    if (bookDate) bookDate.value = new Date().toISOString().slice(0, 10);
+    // Initialize revenue dates to current month
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth();
+    const lastDay = new Date(y, m + 1, 0).getDate();
+    const fStr = `${y}-${String(m + 1).padStart(2, '0')}-01`;
+    const tStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+    const rf = document.getElementById('rev-from-date');
+    const rt = document.getElementById('rev-to-date');
+    if (rf) rf.value = fStr;
+    if (rt) rt.value = tStr;
+
+    showTab('overview');
+  });
+
+  function setRevenuePreset(preset) {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth();
+    let f = '', t = '';
+    if (preset === 'this_month') {
+      f = `${y}-${String(m + 1).padStart(2, '0')}-01`;
+      const lastDay = new Date(y, m + 1, 0).getDate();
+      t = `${y}-${String(m + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+    } else if (preset === 'last_month') {
+      const prevM = new Date(y, m - 1, 1);
+      const py = prevM.getFullYear();
+      const pm = prevM.getMonth();
+      f = `${py}-${String(pm + 1).padStart(2, '0')}-01`;
+      const lastDay = new Date(py, pm + 1, 0).getDate();
+      t = `${py}-${String(pm + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+    } else if (preset === 'all_time') {
+      f = '2026-01-01';
+      t = '2026-12-31';
+    }
+    const rf = document.getElementById('rev-from-date');
+    const rt = document.getElementById('rev-to-date');
+    if (rf) rf.value = f;
+    if (rt) rt.value = t;
+    loadRevenue(f, t);
+  }
+
+  function showTab(name) {
+    if (typeof closeOrderDrawer === 'function') closeOrderDrawer();
+    currentTab = name;
+    document.querySelectorAll('.admin-tab-panel').forEach(p => p.style.display = 'none');
+    const target = document.getElementById('panel-' + name);
+    if (target) {
+      target.style.display = 'block';
+      target.classList.remove('unfold-in');
+      void target.offsetWidth;
+      target.classList.add('unfold-in');
+    }
+    document.querySelectorAll('.admin-nav-btn').forEach(el => el.classList.remove('active'));
+    const btn = document.querySelector('.admin-nav-btn[data-tab="' + name + '"]');
+    if (btn) btn.classList.add('active');
+
+    const topbar = document.querySelector('.admin-topbar');
+    if (topbar) {
+      topbar.style.display = (name === 'revenue') ? 'none' : 'flex';
+    }
+
+    const meta = TAB_META[name] || {};
+    document.getElementById('topbar-title').textContent = meta.title || name;
+    document.getElementById('topbar-desc').textContent = meta.desc || '';
+
+    if (name === 'overview')   loadAdminOverview();
+    if (name === 'stock')      loadAdminKeys();
+    if (name === 'products')   loadProducts();
+    if (name === 'vouchers')   loadAdminVouchers();
+    if (name === 'orders')     loadOrdersTabInit();
+    if (name === 'customers')  { loadAdminOverview(); loadCustomerActivity(); }
+    if (name === 'funds')      loadFunds();
+    if (name === 'revenue')    loadRevenue();
+    if (name === 'ledger')     loadBooks();
+    if (name === 'referrals')  loadAdminReferrals();
+    if (name === 'security')   loadSecurity();
+  }
+
+  function refreshCurrentTab() { showTab(currentTab); }
+
+  function peso(n) {
+    return '₱' + Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function formatDateTime(val) {
+    if (!val) return '—';
+    try {
+      const d = new Date(val);
+      if (isNaN(d.getTime())) return String(val).slice(0, 19);
+      return d.toLocaleString('en-US', {
+        month: 'short', day: 'numeric', year: 'numeric',
+        hour: 'numeric', minute: '2-digit', hour12: true
+      });
+    } catch(e) {
+      return String(val).slice(0, 19);
+    }
+  }
+
+  function copyText(text, label) {
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      if (typeof showToast === 'function') showToast((label || 'Key') + ' copied to clipboard!', 'success');
+    }).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      if (typeof showToast === 'function') showToast((label || 'Key') + ' copied to clipboard!', 'success');
+    });
+  }
+
+  /* ─── OVERVIEW ─── */
+  async function loadAdminOverview() {
+    try {
+      const res = await fetch('/api/admin/overview');
+      if (res.status === 403 || res.status === 401) { window.location.href = '/'; return; }
+      const data = await res.json();
+
+      document.getElementById('stat-keys').innerText = data.available_keys;
+      document.getElementById('stat-used-keys').innerText = data.used_keys;
+      document.getElementById('stat-revenue').innerText = peso(data.total_revenue);
+      document.getElementById('stat-orders').innerText = data.total_orders;
+
+      // Tier stock cards
+      document.getElementById('tier-stock-cards').innerHTML = data.products.map(p => `
+        <div class="tier-card ${p.stock === 0 ? 'empty' : ''}">
+          <div class="tier-dur">${p.duration}</div>
+          <div class="tier-price">₱${p.price.toFixed(0)}</div>
+          <div class="tier-stock ${p.stock > 0 ? 'ok' : 'out'}">
+            ${p.stock > 0
+              ? `<i class="fa-solid fa-circle-check" style="margin-right:3px;"></i> ${p.stock} in stock`
+              : '<i class="fa-solid fa-circle-xmark" style="margin-right:3px;"></i> Out of stock'}
+          </div>
+        </div>
+      `).join('');
+
+      // Product select (exclude kernel)
+      const prodSelect = document.getElementById('key-product-select');
+      prodSelect.innerHTML = data.products
+        .filter(p => !/kernel/i.test(p.name))
+        .map(p => `<option value="${p.id}">${p.name} (${p.duration}) — ₱${p.price.toFixed(0)} [${p.stock}]</option>`)
+        .join('');
+
+      // User select
+      document.getElementById('adj-user-id').innerHTML = data.users.map(u =>
+        `<option value="${u.id}">#${u.id} — ${u.username} (${u.email}) [₱${parseFloat(u.balance).toFixed(2)}]</option>`
+      ).join('');
+
+      // Subtab count
+      const uCnt = document.getElementById('cust-count-users');
+      if (uCnt) uCnt.innerText = data.total_users || data.users.length;
+
+      document.getElementById('admin-users-tbody').innerHTML = data.users.map(u => {
+        const isBanned = !!u.is_banned;
+        return `
+        <tr style="${isBanned ? 'opacity:0.65;' : ''}">
+          <td class="mono muted">#${u.id}</td>
+          <td class="bold">${escapeHtml(u.username)}</td>
+          <td>${escapeHtml(u.email)}</td>
+          <td class="mono bold">${peso(u.balance)}</td>
+          <td>
+            <span class="tag ${u.role === 'admin' ? 'tag-admin' : 'tag-user'}">${escapeHtml(u.role.toUpperCase())}</span>
+            ${isBanned ? '<span class="tag tag-claimed" style="margin-left:4px;">SUSPENDED</span>' : ''}
+          </td>
+          <td class="muted">${new Date(u.created_at).toLocaleDateString()}</td>
+          <td style="text-align:right; white-space:nowrap;">
+            ${u.role !== 'admin' ? `
+              <button type="button" class="btn-ghost ${isBanned ? 'orange' : 'red'}" style="padding:4px 9px; font-size:0.72rem;" onclick="toggleBanUser(${u.id}, '${escapeHtml(u.username)}', ${isBanned ? 'false' : 'true'})">
+                <i class="fa-solid ${isBanned ? 'fa-unlock' : 'fa-ban'}"></i> ${isBanned ? 'Restore' : 'Suspend'}
+              </button>
+            ` : ''}
+            <button type="button" class="btn-ghost" style="padding:4px 9px; font-size:0.72rem;" onclick="resetCustomerPassword(${u.id}, '${escapeHtml(u.username)}')">
+              <i class="fa-solid fa-key"></i> Reset PW
+            </button>
+          </td>
+        </tr>
+      `}).join('');
+
+    } catch (err) {
+      if (typeof showToast === 'function') showToast('Error loading admin overview.', 'error');
+    }
+  }
+
+  /* ─── CUSTOMER ACTIVITY (PURCHASES & DEPOSITS) ─── */
+  let customerActivityData = { purchases: [], deposits: [], stats: {} };
+  let currentCustTab = 'purchases';
+
+  function switchCustTab(tab) {
+    currentCustTab = tab;
+    ['purchases', 'deposits', 'directory'].forEach(t => {
+      const btn = document.getElementById(`btn-custtab-${t}`);
+      const panel = document.getElementById(`custpanel-${t}`);
+      if (btn) btn.classList.toggle('active', t === tab);
+      if (panel) panel.style.display = (t === tab) ? 'block' : 'none';
+    });
+  }
+
+  async function loadCustomerActivity() {
+    try {
+      const res = await fetch('/api/admin/customers/activity');
+      if (!res.ok) return;
+      customerActivityData = await res.json();
+
+      const stats = customerActivityData.stats || {};
+      const pCnt = document.getElementById('cust-count-purchases');
+      const dCnt = document.getElementById('cust-count-deposits');
+      if (pCnt) pCnt.innerText = stats.total_orders_count || (customerActivityData.purchases || []).length;
+      if (dCnt) dCnt.innerText = stats.total_deposits_count || (customerActivityData.deposits || []).length;
+
+      const statPCnt = document.getElementById('stat-cust-purchases-cnt');
+      const statPVal = document.getElementById('stat-cust-purchases-val');
+      if (statPCnt) statPCnt.innerText = stats.total_orders_count || 0;
+      if (statPVal) statPVal.innerText = peso(stats.total_orders_amount || 0);
+
+      const statDCnt = document.getElementById('stat-cust-deposits-cnt');
+      const statDVal = document.getElementById('stat-cust-deposits-val');
+      if (statDCnt) statDCnt.innerText = stats.total_deposits_count || 0;
+      if (statDVal) statDVal.innerText = peso(stats.total_deposits_amount || 0);
+
+      renderCustomerPurchases();
+      renderCustomerDeposits();
+    } catch(err) {
+      console.error('Error loading customer activity:', err);
+    }
+  }
+
+  function renderCustomerPurchases() {
+    const tbody = document.getElementById('cust-purchases-tbody');
+    if (!tbody) return;
+    const filter = (document.getElementById('cust-search-purchases')?.value || '').toLowerCase().trim();
+    const list = (customerActivityData.purchases || []).filter(p => {
+      if (!filter) return true;
+      return (p.username || '').toLowerCase().includes(filter) ||
+             (p.license_key || '').toLowerCase().includes(filter) ||
+             (p.order_id || '').toLowerCase().includes(filter) ||
+             (p.product_name || '').toLowerCase().includes(filter);
+    });
+
+    if (list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="padding:28px; text-align:center; color:var(--text-dark);">No purchases match your filter.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = list.map(p => `
+      <tr>
+        <td class="muted" style="white-space:nowrap; font-size:0.8rem;">
+          <i class="fa-regular fa-clock" style="margin-right:4px; opacity:0.6;"></i>${formatDateTime(p.created_at)}
+        </td>
+        <td>
+          <div style="display:flex; flex-direction:column;">
+            <strong style="color:#d4ff33; font-size:0.88rem;">@${escapeHtml(p.username)}</strong>
+            <span class="muted" style="font-size:0.75rem;">${escapeHtml(p.email || 'No email')}</span>
+          </div>
+        </td>
+        <td>
+          <span class="bold" style="color:#f8fafc;">${escapeHtml(p.product_name)}</span>
+        </td>
+        <td>
+          <div style="display:inline-flex; align-items:center; gap:6px;">
+            <span class="mono" style="background:rgba(255,255,255,0.06); padding:4px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.1); font-size:0.8rem; color:#f8fafc;">
+              ${escapeHtml(p.license_key)}
+            </span>
+            <button class="btn-ghost" onclick="copyText('${escapeHtml(p.license_key)}', 'License key')" title="Copy Key" style="padding:3px 7px; font-size:0.75rem;">
+              <i class="fa-regular fa-copy"></i>
+            </button>
+          </div>
+        </td>
+        <td>
+          <strong style="color:#4ade80;">₱${parseFloat(p.price || 0).toFixed(2)}</strong>
+        </td>
+        <td>
+          <span class="mono muted" style="font-size:0.78rem;">${escapeHtml(p.order_id || '—')}</span>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function renderCustomerDeposits() {
+    const tbody = document.getElementById('cust-deposits-tbody');
+    if (!tbody) return;
+    const filter = (document.getElementById('cust-search-deposits')?.value || '').toLowerCase().trim();
+    const list = (customerActivityData.deposits || []).filter(d => {
+      if (!filter) return true;
+      return (d.username || '').toLowerCase().includes(filter) ||
+             (d.reference_id || '').toLowerCase().includes(filter) ||
+             (d.description || '').toLowerCase().includes(filter);
+    });
+
+    if (list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="padding:28px; text-align:center; color:var(--text-dark);">No deposits match your filter.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = list.map(d => {
+      const isCompleted = d.status === 'completed';
+      const isPending = d.status === 'pending';
+      let statusTag = '';
+      if (isCompleted) {
+        statusTag = `<span class="tag tag-stock"><i class="fa-solid fa-check"></i> COMPLETED</span>`;
+      } else if (isPending) {
+        statusTag = `<span class="tag" style="background:rgba(251,191,36,0.12); color:#fbbf24; border:1px solid rgba(251,191,36,0.3);"><i class="fa-solid fa-clock"></i> PENDING</span>`;
+      } else {
+        statusTag = `<span class="tag tag-claimed">${escapeHtml(d.status || 'unknown')}</span>`;
+      }
+
+      return `
+        <tr>
+          <td class="muted" style="white-space:nowrap; font-size:0.8rem;">
+            <i class="fa-regular fa-clock" style="margin-right:4px; opacity:0.6;"></i>${formatDateTime(d.created_at)}
+          </td>
+          <td>
+            <strong style="color:#d4ff33; font-size:0.88rem;">@${escapeHtml(d.username)}</strong>
+          </td>
+          <td>
+            <strong style="color:#34d399; font-size:0.95rem;">+₱${parseFloat(d.amount || 0).toFixed(2)}</strong>
+          </td>
+          <td>
+            <span style="color:#cbd5e1; font-size:0.82rem;">${escapeHtml(d.description || 'Added funds')}</span>
+          </td>
+          <td>
+            <div style="display:inline-flex; align-items:center; gap:5px;">
+              <span class="mono muted" style="font-size:0.75rem;">${escapeHtml(d.reference_id || '—')}</span>
+              ${d.reference_id ? `<button class="btn-ghost" onclick="copyText('${escapeHtml(d.reference_id)}', 'Reference ID')" title="Copy Ref" style="padding:2px 6px; font-size:0.7rem;"><i class="fa-regular fa-copy"></i></button>` : ''}
+            </div>
+          </td>
+          <td>
+            ${statusTag}
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  /* ─── KEYS ─── */
+  let selectedKeyIds = new Set();
+  let currentKeySearch = '';
+  let keySearchTimeout = null;
+
+  function debounceKeySearch(val) {
+    clearTimeout(keySearchTimeout);
+    keySearchTimeout = setTimeout(() => {
+      currentKeySearch = val;
+      loadAdminKeys();
+    }, 250);
+  }
+
+  async function loadAdminKeys() {
+    const tbody = document.getElementById('admin-keys-tbody');
+    selectedKeyIds.clear();
+    updateSelectedKeysBar();
+    const checkAll = document.getElementById('check-all-keys');
+    if (checkAll) checkAll.checked = false;
+
+    try {
+      const q = new URLSearchParams({
+        status: currentKeyFilter,
+        search: currentKeySearch
+      });
+      const res = await fetch(`/api/admin/keys?${q.toString()}`);
+      const data = await res.json();
+      const keys = data.keys || [];
+
+      if (keys.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="padding:28px; text-align:center; color:var(--text-dark);">No keys found for this filter.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = keys.map(k => {
+        const used = k.is_used === 1;
+        return `
+          <tr id="key-row-${k.id}">
+            <td style="text-align:center;">
+              <input type="checkbox" class="key-checkbox" value="${k.id}" onchange="toggleKeySelect(${k.id}, this.checked)" style="cursor:pointer; accent-color:var(--astral-purple); width:15px; height:15px;">
+            </td>
+            <td class="mono muted">#${k.id}</td>
+            <td>
+              <div class="bold" style="color:#f8fafc;">${escapeHtml(k.product_name || 'Digital Product')}</div>
+              <div class="muted" style="font-size:0.75rem;">${escapeHtml(k.duration || 'Standard')}</div>
+            </td>
+            <td>
+              <div style="display:inline-flex; align-items:center; gap:6px;">
+                <span class="mono ${used ? 'muted' : 'bold'}" style="background:rgba(255,255,255,0.06); padding:3px 7px; border-radius:4px; border:1px solid rgba(255,255,255,0.08); font-size:0.82rem;">
+                  ${escapeHtml(k.license_key)}
+                </span>
+                <button class="btn-ghost" onclick="copyText('${escapeHtml(k.license_key)}', 'License key')" title="Copy Key" style="padding:2px 6px; font-size:0.7rem;">
+                  <i class="fa-regular fa-copy"></i>
+                </button>
+              </div>
+            </td>
+            <td>
+              <span class="tag ${used ? 'tag-claimed' : 'tag-stock'}">
+                ${used ? '<i class="fa-solid fa-circle-xmark"></i> CLAIMED' : '<i class="fa-solid fa-circle-check"></i> IN STOCK'}
+              </span>
+            </td>
+            <td>
+              ${used
+                ? `
+                  <div style="display:flex; flex-direction:column; gap:2px;">
+                    <span style="color:#d4ff33; font-weight:700;"><i class="fa-solid fa-user-tag" style="margin-right:4px;"></i>@${escapeHtml(k.claimed_by_user || 'Customer')}</span>
+                    <span class="mono muted" style="font-size:0.75rem;">${escapeHtml(k.order_id || 'Delivered')}</span>
+                    ${k.used_at ? `<span style="font-size:0.7rem; color:var(--text-dark);"><i class="fa-regular fa-clock" style="margin-right:3px;"></i>${formatDateTime(k.used_at)}</span>` : ''}
+                  </div>
+                `
+                : '<span class="muted" style="color:var(--text-dark);">Available in stock</span>'}
+            </td>
+            <td style="text-align:right; white-space:nowrap;">
+              <div style="display:inline-flex; gap:4px;">
+                ${used ? `<button class="btn-ghost" onclick="bringBackKey(${k.id})" style="padding:4px 8px; font-size:0.72rem;"><i class="fa-solid fa-rotate-left"></i> Restock</button>` : ''}
+                <button class="btn-ghost red" onclick="deleteStockKey(${k.id})" style="padding:4px 8px; font-size:0.72rem;"><i class="fa-solid fa-trash"></i></button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="7" style="padding:28px; text-align:center; color:#ef4444;">Error loading keys.</td></tr>`;
+    }
+  }
+
+  function toggleKeySelect(id, checked) {
+    checked ? selectedKeyIds.add(id) : selectedKeyIds.delete(id);
+    updateSelectedKeysBar();
+  }
+  function toggleSelectAllKeys(master) {
+    document.querySelectorAll('.key-checkbox').forEach(cb => {
+      cb.checked = master.checked;
+      master.checked ? selectedKeyIds.add(parseInt(cb.value)) : selectedKeyIds.delete(parseInt(cb.value));
+    });
+    updateSelectedKeysBar();
+  }
+  function clearSelectedKeys() {
+    selectedKeyIds.clear();
+    document.querySelectorAll('.key-checkbox').forEach(cb => cb.checked = false);
+    const m = document.getElementById('check-all-keys');
+    if (m) m.checked = false;
+    updateSelectedKeysBar();
+  }
+  function updateSelectedKeysBar() {
+    const bar = document.getElementById('batch-key-actions-bar');
+    const cnt = document.getElementById('selected-keys-count');
+    if (!bar || !cnt) return;
+    cnt.innerText = selectedKeyIds.size;
+    bar.style.display = selectedKeyIds.size > 0 ? 'flex' : 'none';
+  }
+
+  function filterKeys(f) {
+    currentKeyFilter = f;
+    document.querySelectorAll('.chip').forEach(b => b.classList.remove('active'));
+    const el = document.getElementById(`btn-filter-${f}`);
+    if (el) el.classList.add('active');
+    loadAdminKeys();
+  }
+
+  async function deleteSelectedKeys() {
+    if (selectedKeyIds.size === 0) { showToast('Select at least one key.', 'info'); return; }
+    const ids = Array.from(selectedKeyIds);
+    if (!confirm(`Delete ${ids.length} key(s)?`)) return;
+    try {
+      const res = await fetch('/api/admin/keys/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ids}) });
+      const data = await res.json();
+      if (res.ok) { showToast(data.message || 'Deleted.', 'success'); selectedKeyIds.clear(); loadAdminOverview(); loadAdminKeys(); }
+      else showToast(data.error || 'Failed.', 'error');
+    } catch(e) { showToast('Error deleting keys.', 'error'); }
+  }
+
+  async function deleteStockKey(id) {
+    if (!confirm('Delete this key?')) return;
+    try {
+      const res = await fetch('/api/admin/keys/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id}) });
+      const data = await res.json();
+      if (res.ok) { showToast(data.message || 'Deleted.', 'success'); selectedKeyIds.delete(id); updateSelectedKeysBar(); loadAdminOverview(); loadAdminKeys(); }
+      else showToast(data.error || 'Failed.', 'error');
+    } catch(e) { showToast('Error.', 'error'); }
+  }
+
+  async function bringBackKey(id) {
+    try {
+      const res = await fetch('/api/admin/keys/bring-back', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id}) });
+      const data = await res.json();
+      if (res.ok) { showToast(data.message || 'Restocked.', 'success'); loadAdminOverview(); loadAdminKeys(); }
+      else showToast(data.error || 'Failed.', 'error');
+    } catch(e) { showToast('Error.', 'error'); }
+  }
+
+  async function bringBackAllKeys() {
+    if (!confirm('Bring ALL claimed keys back to stock?')) return;
+    try {
+      const res = await fetch('/api/admin/keys/bring-back', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({all:true}) });
+      const data = await res.json();
+      if (res.ok) { showToast(data.message || 'All restocked.', 'success'); loadAdminOverview(); loadAdminKeys(); }
+      else showToast(data.error || 'Failed.', 'error');
+    } catch(e) { showToast('Error.', 'error'); }
+  }
+
+  async function handleImportKeys(e) {
+    e.preventDefault();
+    const productId = document.getElementById('key-product-select').value;
+    const rawKeys = document.getElementById('key-bulk-textarea').value.trim();
+    const btn = document.getElementById('btn-import-keys');
+    if (!productId || !rawKeys) { showToast('Select a tier and paste keys.', 'error'); return; }
+    btn.disabled = true; btn.innerText = 'Importing...';
+    try {
+      const res = await fetch('/api/admin/keys/add', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({product_id:productId, keys:rawKeys}) });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.error || 'Import failed.', 'error'); btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-plus"></i> Add Keys to Stock'; return; }
+      showToast(data.message, 'success');
+      document.getElementById('key-bulk-textarea').value = '';
+      btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-plus"></i> Add Keys to Stock';
+      loadAdminOverview(); loadAdminKeys();
+    } catch(err) { showToast('Network error.', 'error'); btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-plus"></i> Add Keys to Stock'; }
+  }
+
+  /* ─── BALANCE ADJUST ─── */
+  async function handleAdjustBalance(e) {
+    e.preventDefault();
+    const userId = document.getElementById('adj-user-id').value;
+    const amount = parseFloat(document.getElementById('adj-amount').value);
+    const reason = document.getElementById('adj-reason').value.trim();
+    const btn = document.getElementById('btn-adjust-submit');
+    if (!userId || isNaN(amount)) { showToast('Select a user and amount.', 'error'); return; }
+    btn.disabled = true; btn.innerText = 'Adjusting...';
+    try {
+      const res = await fetch('/api/admin/users/balance', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:userId, amount, reason}) });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.error || 'Failed.', 'error'); btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check"></i> Apply'; return; }
+      showToast(data.message, 'success');
+      btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check"></i> Apply';
+      loadAdminOverview();
+    } catch(err) { showToast('Network error.', 'error'); btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check"></i> Apply'; }
+  }
+
+  /* ─── FUNDS ─── */
+  let fundsUsersList = [];
+  let fundsCustomerDepositsList = [];
+
+  async function loadFunds() {
+    try {
+      const res = await fetch('/api/admin/funds');
+      if (!res.ok) return;
+      const data = await res.json();
+
+      document.getElementById('funds-balance').innerText = peso(data.balance);
+      document.getElementById('funds-total-added').innerText = peso(data.total_added);
+      document.getElementById('funds-total-removed').innerText = peso(data.total_removed);
+
+      // Customer deposits total
+      fundsCustomerDepositsList = data.customer_deposits || [];
+      const completedDeps = fundsCustomerDepositsList.filter(d => d.status === 'completed');
+      const custDepTotal = completedDeps.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+      const custDepCard = document.getElementById('funds-cust-deposits-val');
+      if (custDepCard) custDepCard.innerText = peso(custDepTotal);
+
+      // Users for searchable select
+      fundsUsersList = data.users || [];
+      const searchVal = document.getElementById('funds-user-search')?.value || '';
+      renderFundUserOptions(searchVal);
+
+      // Render tables
+      renderFundsCustomerDeposits();
+
+      // Render Admin adjustments
+      const rows = data.adjustments || [];
+      const fundsTbody = document.getElementById('funds-rows');
+      if (fundsTbody) {
+        fundsTbody.innerHTML = rows.length ? rows.map(a => `
+          <tr>
+            <td class="muted" style="white-space:nowrap; font-size:0.8rem;">
+              <i class="fa-regular fa-clock" style="margin-right:4px; opacity:0.6;"></i>${formatDateTime(a.created_at)}
+            </td>
+            <td class="bold">${escapeHtml(a.admin_user || '')}</td>
+            <td>
+              ${a.target_username
+                ? `<strong style="color:#d4ff33;">@${escapeHtml(a.target_username)}</strong>`
+                : '<span class="muted">Shop General</span>'}
+            </td>
+            <td><span class="tag ${a.adjustment_type === 'add' ? 'tag-add' : 'tag-remove'}">${a.adjustment_type === 'add' ? 'ADD' : 'REMOVE'}</span></td>
+            <td class="mono bold" style="color:${a.adjustment_type === 'add' ? '#34d399' : '#ef4444'};">${a.adjustment_type === 'add' ? '+' : '−'}${peso(a.amount)}</td>
+            <td style="color:#cbd5e1; font-size:0.85rem;">${escapeHtml(a.note || '')}</td>
+          </tr>
+        `).join('') : '<tr><td colspan="6" style="padding:24px; text-align:center; color:var(--text-dark);">No fund adjustments yet.</td></tr>';
+      }
+
+    } catch (err) {
+      if (typeof showToast === 'function') showToast('Error loading funds.', 'error');
+    }
+  }
+
+  function filterFundUsers(keyword) {
+    renderFundUserOptions(keyword);
+  }
+
+  function renderFundUserOptions(keyword = '') {
+    const select = document.getElementById('funds-user-id');
+    if (!select) return;
+    const term = (keyword || '').toLowerCase().trim();
+    const currentVal = select.value;
+
+    const filtered = fundsUsersList.filter(u => {
+      if (!term) return true;
+      return (u.username || '').toLowerCase().includes(term) || (u.email || '').toLowerCase().includes(term);
+    });
+
+    select.innerHTML = '<option value="">-- General / No Customer Selected --</option>' +
+      filtered.map(u => `<option value="${u.id}" ${String(u.id) === String(currentVal) ? 'selected' : ''}>@${escapeHtml(u.username)} (${escapeHtml(u.email || '')}) [${peso(u.balance)}]</option>`).join('');
+
+    // If filtered down to 1 user and typing, auto select
+    if (term && filtered.length === 1 && !currentVal) {
+      select.value = filtered[0].id;
+      onFundUserSelect(filtered[0].id);
+    } else {
+      onFundUserSelect(select.value);
+    }
+  }
+
+  function onFundUserSelect(userId) {
+    const badge = document.getElementById('funds-selected-user-badge');
+    const clearBtn = document.getElementById('funds-clear-user-btn');
+    if (!userId) {
+      if (badge) badge.style.display = 'none';
+      if (clearBtn) clearBtn.style.display = 'none';
+      return;
+    }
+    const user = fundsUsersList.find(u => String(u.id) === String(userId));
+    if (user && badge) {
+      document.getElementById('funds-badge-username').innerText = '@' + user.username;
+      document.getElementById('funds-badge-balance').innerText = peso(user.balance);
+      badge.style.display = 'block';
+      if (clearBtn) clearBtn.style.display = 'inline';
+    }
+  }
+
+  function clearFundUserSelect() {
+    const searchInput = document.getElementById('funds-user-search');
+    const select = document.getElementById('funds-user-id');
+    if (searchInput) searchInput.value = '';
+    if (select) select.value = '';
+    renderFundUserOptions('');
+    onFundUserSelect('');
+  }
+
+  function renderFundsCustomerDeposits() {
+    const tbody = document.getElementById('funds-customer-deposits-rows');
+    if (!tbody) return;
+    const term = (document.getElementById('funds-dep-search')?.value || '').toLowerCase().trim();
+
+    const filtered = (fundsCustomerDepositsList || []).filter(d => {
+      if (!term) return true;
+      return (d.username || '').toLowerCase().includes(term) ||
+             (d.reference_id || '').toLowerCase().includes(term) ||
+             (d.description || '').toLowerCase().includes(term);
+    });
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="padding:28px; text-align:center; color:var(--text-dark);">No customer deposits found.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(d => {
+      const isCompleted = d.status === 'completed';
+      const isPending = d.status === 'pending';
+      let statusTag = '';
+      if (isCompleted) {
+        statusTag = `<span class="tag tag-stock"><i class="fa-solid fa-check"></i> COMPLETED</span>`;
+      } else if (isPending) {
+        statusTag = `<span class="tag" style="background:rgba(251,191,36,0.12); color:#fbbf24; border:1px solid rgba(251,191,36,0.3);"><i class="fa-solid fa-clock"></i> PENDING</span>`;
+      } else {
+        statusTag = `<span class="tag tag-claimed">${escapeHtml(d.status || 'unknown')}</span>`;
+      }
+
+      return `
+        <tr>
+          <td class="muted" style="white-space:nowrap; font-size:0.8rem;">
+            <i class="fa-regular fa-clock" style="margin-right:4px; opacity:0.6;"></i>${formatDateTime(d.created_at)}
+          </td>
+          <td>
+            <div style="display:flex; flex-direction:column;">
+              <strong style="color:#d4ff33; font-size:0.88rem;">@${escapeHtml(d.username)}</strong>
+              <span class="muted" style="font-size:0.75rem;">${escapeHtml(d.email || '')}</span>
+            </div>
+          </td>
+          <td>
+            <strong style="color:#34d399; font-size:0.95rem;">+₱${parseFloat(d.amount || 0).toFixed(2)}</strong>
+          </td>
+          <td>
+            <span style="color:#cbd5e1; font-size:0.82rem;">${escapeHtml(d.description || 'Added funds')}</span>
+          </td>
+          <td>
+            <div style="display:inline-flex; align-items:center; gap:5px;">
+              <span class="mono muted" style="font-size:0.75rem;">${escapeHtml(d.reference_id || '—')}</span>
+              ${d.reference_id ? `<button class="btn-ghost" onclick="copyText('${escapeHtml(d.reference_id)}', 'Reference ID')" title="Copy Ref" style="padding:2px 6px; font-size:0.7rem;"><i class="fa-regular fa-copy"></i></button>` : ''}
+            </div>
+          </td>
+          <td>
+            ${statusTag}
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  async function saveFundAdjustment(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-funds-submit');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...'; }
+
+    try {
+      const res = await fetch('/api/admin/funds', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          adjustment_type: document.getElementById('funds-type').value,
+          amount: document.getElementById('funds-amount').value,
+          user_id: document.getElementById('funds-user-id').value,
+          note: document.getElementById('funds-note').value
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.error || 'Could not save.', 'error');
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-bolt"></i> Apply Funds'; }
+        return;
+      }
+      document.getElementById('funds-amount').value = '';
+      document.getElementById('funds-note').value = '';
+      showToast(data.message || 'Funds updated.', 'success');
+      loadFunds();
+      if (typeof loadAdminOverview === 'function') loadAdminOverview();
+    } catch(err) {
+      showToast('Network error saving funds.', 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-bolt"></i> Apply Funds'; }
+    }
+  }
+
+  /* ─── REVENUE (ASTRAL VIEW STATISTICS) ─── */
+  let currentChartType = 'bar';
+  let revenueCachedData = null;
+
+  function setChartType(type) {
+    currentChartType = type;
+    document.querySelectorAll('.astral-view-btn').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById(`btn-chart-${type}`);
+    if (btn) btn.classList.add('active');
+    if (revenueCachedData) {
+      renderAstralChart(revenueCachedData);
+    }
+  }
+
+  function applyRevenueFilter() {
+    const fromVal = document.getElementById('rev-from-date').value;
+    const toVal = document.getElementById('rev-to-date').value;
+    const interval = document.getElementById('astral-interval-select').value;
+    loadRevenue(fromVal, toVal, interval);
+  }
+
+  async function loadRevenue(fromParam, toParam, intervalParam) {
+    try {
+      const fromInput = document.getElementById('rev-from-date');
+      const toInput = document.getElementById('rev-to-date');
+      const intervalSelect = document.getElementById('astral-interval-select');
+
+      const f = fromParam || (fromInput ? fromInput.value : '');
+      const t = toParam || (toInput ? toInput.value : '');
+      const inv = intervalParam || (intervalSelect ? intervalSelect.value : 'daily');
+
+      const url = `/api/admin/revenue?from=${encodeURIComponent(f)}&to=${encodeURIComponent(t)}&interval=${encodeURIComponent(inv)}`;
+      const res = await fetch(url);
+      if (!res.ok) return;
+      const data = await res.json();
+      revenueCachedData = data;
+
+      // Update date inputs if set by server
+      if (fromInput && data.from_date) fromInput.value = data.from_date;
+      if (toInput && data.to_date) toInput.value = data.to_date;
+      if (intervalSelect && data.interval) intervalSelect.value = data.interval;
+
+      // Subtitle range
+      const subRange = document.getElementById('astral-date-range-sub');
+      if (subRange && data.from_date && data.to_date) {
+        try {
+          const d1 = new Date(data.from_date + 'T00:00:00');
+          const d2 = new Date(data.to_date + 'T00:00:00');
+          const opt = { month: 'short', day: 'numeric', year: 'numeric' };
+          subRange.innerText = `${d1.toLocaleDateString('en-US', opt)} – ${d2.toLocaleDateString('en-US', opt)}`;
+        } catch(e) {
+          subRange.innerText = `${data.from_date} – ${data.to_date}`;
+        }
+      }
+
+      // Total earnings & trend pill
+      const earnEl = document.getElementById('astral-total-earnings');
+      if (earnEl) earnEl.innerText = peso(data.total_revenue);
+
+      const trendPill = document.getElementById('astral-trend-pill');
+      const trendIcon = document.getElementById('astral-trend-icon');
+      const trendText = document.getElementById('astral-trend-text');
+      if (trendPill && trendIcon && trendText) {
+        const isInc = data.is_increase;
+        const pct = Math.abs(data.pct_change || 0);
+        trendPill.className = `astral-trend-pill ${isInc ? 'up' : 'down'}`;
+        trendIcon.className = `fa-solid fa-arrow-${isInc ? 'up' : 'down'}`;
+        trendText.innerText = `${pct.toFixed(1)}% vs previous period`;
+      }
+
+      // Payouts subtitle
+      const payoutsEl = document.getElementById('astral-payouts-subtitle');
+      if (payoutsEl) {
+        payoutsEl.innerText = `${data.total_orders || 0} payouts in this period`;
+      }
+
+      // Breakdown table: Source Code, Kova Android, Cloud iOS
+      const bMap = {};
+      (data.breakdown || []).forEach(b => {
+        bMap[b.name] = b;
+      });
+
+      const src = bMap['Source Code'] || { sold: 0, amount: 0.0 };
+      const android = bMap['Kova Android'] || { sold: 0, amount: 0.0 };
+      const ios = bMap['Cloud iOS'] || { sold: 0, amount: 0.0 };
+
+      const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+      setEl('sb-source-sold', `${src.sold} sold`);
+      setEl('sb-source-amount', peso(src.amount));
+
+      setEl('sb-android-sold', `${android.sold} sold`);
+      setEl('sb-android-amount', peso(android.amount));
+
+      setEl('sb-ios-sold', `${ios.sold} sold`);
+      setEl('sb-ios-amount', peso(ios.amount));
+
+      setEl('sb-total-sold', data.total_orders || 0);
+      setEl('sb-total-amount', peso(data.total_revenue));
+
+      // Render chart
+      renderAstralChart(data);
+
+      // Mini monthly list
+      const miniList = document.getElementById('astral-monthly-mini-list');
+      if (miniList) {
+        const months = data.months || [];
+        miniList.innerHTML = months.length ? months.map(m => `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 10px; background:rgba(255,255,255,0.02); border-radius:8px; border:1px solid rgba(255,255,255,0.04);">
+            <span style="font-weight:700; color:#cbd5e1;">${m.month}</span>
+            <span style="color:#64748b;">${m.orders} order(s)</span>
+            <span style="font-weight:800; color:#d4ff33;">${peso(m.revenue)}</span>
+          </div>
+        `).join('') : '<div style="color:#64748b; font-size:0.75rem;">No historical orders yet.</div>';
+      }
+
+    } catch (err) {
+      if (typeof showToast === 'function') showToast('Error loading statistics.', 'error');
+    }
+  }
+
+  function renderAstralChart(data) {
+    const barsRow = document.getElementById('astral-bars-row');
+    const xAxis = document.getElementById('astral-x-axis');
+    const yMaxEl = document.getElementById('astral-y-max');
+    if (!barsRow || !xAxis) return;
+
+    const points = data.chart_points || [];
+    const maxVal = Math.max(data.max_amount || 100, 100);
+    if (yMaxEl) yMaxEl.innerText = peso(maxVal);
+
+    if (points.length === 0) {
+      barsRow.innerHTML = '<div style="width:100%; text-align:center; color:#64748b; font-size:0.8rem; padding:40px;">No sales data in this period.</div>';
+      xAxis.innerHTML = '';
+      return;
+    }
+
+    if (currentChartType === 'line') {
+      // SVG Line Chart
+      const width = barsRow.clientWidth || 400;
+      const height = 150;
+      const stepX = points.length > 1 ? (width - 20) / (points.length - 1) : width / 2;
+
+      const polyPoints = points.map((p, idx) => {
+        const x = 10 + idx * stepX;
+        const y = height - (p.amount / maxVal) * (height - 20) - 10;
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      }).join(' ');
+
+      barsRow.innerHTML = `
+        <svg width="100%" height="100%" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" style="overflow:visible;">
+          <defs>
+            <linearGradient id="astralLineGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#d4ff33" stop-opacity="0.32"/>
+              <stop offset="100%" stop-color="#89a814" stop-opacity="0.0"/>
+            </linearGradient>
+          </defs>
+          <polygon points="10,${height} ${polyPoints} ${width - 10},${height}" fill="url(#astralLineGrad)" />
+          <polyline fill="none" stroke="#d4ff33" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="${polyPoints}" />
+          ${points.map((p, idx) => {
+            const x = 10 + idx * stepX;
+            const y = height - (p.amount / maxVal) * (height - 20) - 10;
+            return `
+              <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${p.amount > 0 ? 5 : 2}" fill="${p.amount > 0 ? '#f4f2ec' : '#89a814'}" stroke="#d4ff33" stroke-width="2">
+                <title>${p.label}: ${peso(p.amount)}</title>
+              </circle>
+            `;
+          }).join('')}
+        </svg>
+      `;
+    } else {
+      // Sleek Rounded Purple Bar Chart
+      barsRow.innerHTML = points.map(p => {
+        const pct = Math.max(3, (p.amount / maxVal) * 100);
+        const isHighlight = p.amount > 0;
+        return `
+          <div class="astral-bar-slot" title="${p.label}: ${peso(p.amount)}">
+            <div class="astral-bar-tooltip">${p.label}<br><strong>${peso(p.amount)}</strong></div>
+            <div class="astral-bar ${isHighlight ? 'highlight' : ''}" style="height: ${pct.toFixed(1)}%;"></div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // X-axis labels (render ~6 evenly spaced labels to avoid clutter)
+    const labelStep = Math.max(1, Math.floor(points.length / 6));
+    const labels = [];
+    for (let i = 0; i < points.length; i += labelStep) {
+      labels.push(points[i].label);
+    }
+    if (points.length > 0 && !labels.includes(points[points.length - 1].label)) {
+      labels.push(points[points.length - 1].label);
+    }
+
+    xAxis.innerHTML = labels.map(lbl => `<span>${lbl}</span>`).join('');
+  }
+
+  /* ─── LEDGER ─── */
+  async function loadBooks() {
+    const res = await fetch('/api/admin/books');
+    if (!res.ok) return;
+    const data = await res.json();
+    const t = data.totals || {};
+
+    const statMap = [
+      ['Sales', t.sales, ''],
+      ['Came In', t.deposits, 'blue'],
+      ['Spends', t.spend, 'red'],
+      ['Added', t.added, 'green'],
+      ['Open Debt', t.open_debt, 'red'],
+      ['After Spends', t.made, (t.made || 0) >= 0 ? 'green' : 'red']
+    ];
+    document.getElementById('books-totals').innerHTML = statMap.map(([label, val, cls]) => `
+      <div class="stat-card">
+        <div class="label">${label}</div>
+        <div class="value ${cls}" style="font-size:1.3rem;">${peso(val)}</div>
+      </div>
+    `).join('');
+
+    const months = data.months || [];
+    document.getElementById('books-months').innerHTML = months.length ? months.map(m => `
+      <tr>
+        <td class="bold">${m.month}</td>
+        <td class="mono">${peso(m.sales)}</td>
+        <td class="mono">${peso(m.deposits)}</td>
+        <td class="mono" style="color:#fbbf24;">${peso(m.spend)}</td>
+        <td class="mono" style="color:#34d399;">${peso(m.added)}</td>
+        <td class="mono" style="color:#ef4444;">${peso(m.debt)}</td>
+        <td class="mono bold">${peso(m.made)}</td>
+      </tr>
+    `).join('') : '<tr><td colspan="7" style="padding:20px;">No months yet.</td></tr>';
+
+    const typeTag = {
+      direct_sale: 'tag-add',
+      sale: 'tag-add',
+      spend: 'tag-spend',
+      added: 'tag-product',
+      debt: 'tag-debt',
+      repay: 'tag-repay'
+    };
+    const typeLabel = {
+      direct_sale: 'DIRECT SALE',
+      sale: 'DIRECT SALE',
+      spend: 'SPEND',
+      added: 'ADDED',
+      debt: 'DEBT',
+      repay: 'REPAY'
+    };
+    const lines = data.entries || [];
+    document.getElementById('books-lines').innerHTML = lines.length ? lines.map(line => {
+      let catTag = '—';
+      if (line.category && line.category !== 'general') {
+        const icon = line.category.includes('iOS') ? 'fa-brands fa-apple' : (line.category.includes('Android') ? 'fa-brands fa-android' : 'fa-solid fa-code');
+        catTag = `<span class="tag tag-product"><i class="${icon}"></i> ${line.category}</span>`;
+      }
+      return `
+        <tr>
+          <td class="mono muted">${line.occurred_on}</td>
+          <td><span class="tag ${typeTag[line.entry_type] || ''}">${typeLabel[line.entry_type] || line.entry_type}</span></td>
+          <td>${catTag}</td>
+          <td class="mono bold" style="color: ${line.entry_type.includes('sale') ? '#34d399' : '#f8fafc'};">${peso(line.amount)}</td>
+          <td>${line.note || ''}</td>
+          <td style="text-align:right;"><button class="btn-ghost red" onclick="dropBookLine(${line.id})" style="padding:3px 8px; font-size:0.72rem;"><i class="fa-solid fa-trash"></i></button></td>
+        </tr>
+      `;
+    }).join('') : '<tr><td colspan="6" style="padding:20px;">No entries logged yet.</td></tr>';
+  }
+
+  async function saveBookLine(e) {
+    e.preventDefault();
+    const res = await fetch('/api/admin/books', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        entry_type: document.getElementById('book-type').value,
+        category: document.getElementById('book-category').value,
+        amount: document.getElementById('book-amount').value,
+        occurred_on: document.getElementById('book-date').value,
+        note: document.getElementById('book-note').value
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) { showToast(data.error || 'Could not save.', 'error'); return; }
+    document.getElementById('book-amount').value = '';
+    document.getElementById('book-note').value = '';
+    showToast(data.message || 'Saved.', 'success');
+    loadBooks();
+    // Also refresh revenue in background if loaded
+    if (typeof loadRevenue === 'function') loadRevenue();
+  }
+
+  async function dropBookLine(id) {
+    await fetch('/api/admin/books/' + id, { method: 'DELETE' });
+    loadBooks();
+  }
+
+  async function loadSecurity() {
+    const res = await fetch('/api/admin/security');
+    if (!res.ok) return;
+    const data = await res.json();
+    const counts = data.counts || {};
+    const labels = { login_fail:'Bad Sign-ins', admin_fail:'Bad Gate Tries', admin_lock:'Lockouts', probe:'Scanners', csrf_block:'CSRF Blocks', admin_ok:'Opened' };
+    document.getElementById('security-counts').innerHTML = Object.keys(labels).map(key => `
+      <div class="stat-card">
+        <div class="label">${labels[key]}</div>
+        <div class="value ${key === 'admin_ok' ? 'green' : 'red'}" style="font-size:1.3rem;">${counts[key] || 0}</div>
+      </div>
+    `).join('');
+
+    const blocked = data.blocked_ips || [];
+    const blockedBody = document.getElementById('blocked-ips-rows');
+    if (blockedBody) {
+      blockedBody.innerHTML = blocked.length ? blocked.map(b => `
+        <tr>
+          <td class="mono bold" style="color:#f87171;">${escapeHtml(b.ip)}</td>
+          <td>${escapeHtml(b.reason || '')}</td>
+          <td class="muted">${escapeHtml(b.blocked_by || '')}</td>
+          <td style="text-align:right;">
+            <button type="button" class="btn-ghost" style="padding:3px 8px; font-size:0.72rem;" onclick="unblockIp(${b.id})">Unblock</button>
+          </td>
+        </tr>
+      `).join('') : '<tr><td colspan="4" style="padding:18px; color:var(--text-muted);">No blocked IPs.</td></tr>';
+    }
+
+    const audits = data.audit_logs || [];
+    const auditBody = document.getElementById('audit-log-rows');
+    if (auditBody) {
+      auditBody.innerHTML = audits.length ? audits.map(a => `
+        <tr>
+          <td class="muted" style="font-size:0.76rem; white-space:nowrap;">${formatDateTime(a.created_at)}</td>
+          <td class="bold">@${escapeHtml(a.admin_user)}</td>
+          <td><span class="tag tag-product">${escapeHtml(a.action)}</span></td>
+          <td style="font-size:0.8rem;">
+            ${a.target ? `<strong style="color:#fff;">${escapeHtml(a.target)}</strong> ` : ''}
+            <span class="muted">${escapeHtml(a.detail || '')}</span>
+          </td>
+        </tr>
+      `).join('') : '<tr><td colspan="4" style="padding:18px; color:var(--text-muted);">No audit entries yet.</td></tr>';
+    }
+
+    const rows = data.events || [];
+    document.getElementById('security-rows').innerHTML = rows.length ? rows.map(ev => `
+      <tr>
+        <td class="muted" style="font-size:0.78rem;">${formatDateTime(ev.created_at)}</td>
+        <td class="mono">${escapeHtml(ev.ip || '')}</td>
+        <td class="bold">${escapeHtml(ev.kind || '')}</td>
+        <td class="mono muted">${escapeHtml(ev.path || '')}</td>
+        <td>${escapeHtml(ev.detail || '')}</td>
+        <td style="text-align:right;">
+          ${ev.ip && ev.ip !== '127.0.0.1' && ev.ip !== '::1' ? `<button type="button" class="btn-ghost red" style="padding:3px 8px; font-size:0.7rem;" onclick="quickBlockIp('${escapeHtml(ev.ip)}', '${escapeHtml(ev.kind)}')"><i class="fa-solid fa-ban"></i> Block</button>` : ''}
+        </td>
+      </tr>
+    `).join('') : '<tr><td colspan="6" style="padding:24px;">No attempts yet.</td></tr>';
+  }
+
+  async function handleBlockIp(e) {
+    e.preventDefault();
+    const ip = document.getElementById('sec-block-ip').value.trim();
+    const reason = document.getElementById('sec-block-reason').value.trim();
+    const res = await fetch('/api/admin/security/block-ip', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ip, reason })
+    });
+    const data = await res.json();
+    if (!res.ok) { showToast(data.error || 'Could not block IP.', 'error'); return; }
+    document.getElementById('sec-block-ip').value = '';
+    document.getElementById('sec-block-reason').value = '';
+    showToast(data.message || 'IP blocked.', 'success');
+    loadSecurity();
+  }
+
+  async function quickBlockIp(ip, kind) {
+    if (!confirm(`Block all requests from IP ${ip}?`)) return;
+    const res = await fetch('/api/admin/security/block-ip', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ip, reason: `Flagged from ${kind}` })
+    });
+    const data = await res.json();
+    if (!res.ok) { showToast(data.error || 'Could not block IP.', 'error'); return; }
+    showToast(data.message || 'IP blocked.', 'success');
+    loadSecurity();
+  }
+
+  async function unblockIp(id) {
+    const res = await fetch('/api/admin/security/block-ip/' + id, { method: 'DELETE' });
+    const data = await res.json();
+    if (!res.ok) { showToast(data.error || 'Could not unblock.', 'error'); return; }
+    showToast(data.message || 'IP unblocked.', 'info');
+    loadSecurity();
+  }
+
+  async function toggleBanUser(userId, username, shouldBan) {
+    let reason = '';
+    if (shouldBan) {
+      reason = prompt(`Enter suspension reason for @${username}:`, 'Terms violation / chargeback');
+      if (reason === null) return;
+    } else {
+      if (!confirm(`Restore account access for @${username}?`)) return;
+    }
+    const res = await fetch(`/api/admin/users/${userId}/ban`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ banned: shouldBan, reason })
+    });
+    const data = await res.json();
+    if (!res.ok) { showToast(data.error || 'Action failed.', 'error'); return; }
+    showToast(data.message || 'Updated.', 'success');
+    loadAdminOverview();
+  }
+
+  async function resetCustomerPassword(userId, username) {
+    const custom = prompt(`Set new password for @${username} (leave blank to auto-generate a temporary password):`, '');
+    if (custom === null) return;
+    const res = await fetch(`/api/admin/users/${userId}/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ new_password: custom.trim() })
+    });
+    const data = await res.json();
+    if (!res.ok) { showToast(data.error || 'Reset failed.', 'error'); return; }
+    if (data.temporary_password) {
+      copyText(data.temporary_password, 'Temporary password');
+      alert(`Temporary password for @${username} (also copied to clipboard):\n\n${data.temporary_password}`);
+    } else {
+      showToast(data.message || 'Password updated.', 'success');
+    }
+  }
+
+  async function loadAdminVouchers() {
+    try {
+      const res = await fetch('/api/admin/vouchers');
+      if (!res.ok) return;
+      const data = await res.json();
+      const st = data.stats || {};
+      document.getElementById('vstat-active').innerText = st.active_count || 0;
+      document.getElementById('vstat-used').innerText = st.total_redemptions || 0;
+      document.getElementById('vstat-saved').innerText = peso(st.total_discounted || 0);
+
+      const list = data.vouchers || [];
+      document.getElementById('admin-vouchers-tbody').innerHTML = list.length ? list.map(v => {
+        const isUnlimited = !v.max_uses || v.max_uses === 0;
+        const exhausted = !isUnlimited && v.used_count >= v.max_uses;
+        const active = !!v.is_active && !exhausted;
+        return `
+          <tr style="${active ? '' : 'opacity:0.6;'}">
+            <td>
+              <button type="button" class="btn-ghost" style="font-family:var(--font-mono); color:#d4ff33; padding:4px 10px;" onclick="copyText('${escapeHtml(v.code)}', 'Voucher code')" title="Click to copy">
+                <i class="fa-regular fa-copy"></i> ${escapeHtml(v.code)}
+              </button>
+            </td>
+            <td><span class="tag tag-product">${v.discount_percent}% OFF</span></td>
+            <td>${v.tier_scope === 'lifetime' ? '<span class="tag tag-admin">LIFETIME ONLY</span>' : '<span class="tag tag-user">ALL TIERS</span>'}</td>
+            <td class="mono">${v.used_count} / ${isUnlimited ? '∞' : v.max_uses}</td>
+            <td class="mono muted">${escapeHtml(v.expires_at || 'Never')}</td>
+            <td class="muted">${escapeHtml(v.note || '—')}</td>
+            <td>
+              ${exhausted ? '<span class="tag tag-claimed">DEPLETED</span>' : (v.is_active ? '<span class="tag tag-stock">ACTIVE</span>' : '<span class="tag tag-spend">PAUSED</span>')}
+            </td>
+            <td style="text-align:right; white-space:nowrap;">
+              <button type="button" class="btn-ghost" style="padding:4px 9px; font-size:0.72rem;" onclick="toggleVoucherActive(${v.id}, ${v.is_active ? 0 : 1})">
+                ${v.is_active ? 'Pause' : 'Enable'}
+              </button>
+              <button type="button" class="btn-ghost red" style="padding:4px 9px; font-size:0.72rem;" onclick="deleteVoucher(${v.id}, '${escapeHtml(v.code)}')">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('') : '<tr><td colspan="8" style="padding:24px; text-align:center; color:var(--text-muted);">No vouchers created yet. Click + 20%, + 50%, or + 65% Lifetime above!</td></tr>';
+
+      const usages = data.usages || [];
+      document.getElementById('admin-voucher-usages-tbody').innerHTML = usages.length ? usages.map(u => `
+        <tr>
+          <td class="muted" style="font-size:0.78rem;">${formatDateTime(u.created_at)}</td>
+          <td class="bold">@${escapeHtml(u.username)}</td>
+          <td class="mono" style="color:#d4ff33;">${escapeHtml(u.voucher_code)}</td>
+          <td class="mono" style="color:#f4f2ec;">${escapeHtml(u.order_id)}</td>
+          <td class="mono muted">${peso(u.original_price)}</td>
+          <td class="mono" style="color:#34d399;">-${peso(u.discount_amount)}</td>
+          <td class="mono bold">${peso(u.final_price)}</td>
+        </tr>
+      `).join('') : '<tr><td colspan="7" style="padding:22px; text-align:center; color:var(--text-muted);">No voucher redemptions yet.</td></tr>';
+    } catch (e) {
+      if (typeof showToast === 'function') showToast('Failed to load vouchers.', 'error');
+    }
+  }
+
+  async function quickGenerateLifetimeVoucher(percent) {
+    const res = await fetch('/api/admin/vouchers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        discount_percent: percent,
+        tier_scope: 'lifetime',
+        max_uses: 1,
+        per_user_limit: 1,
+        count: 1,
+        note: `Quick ${percent}% Lifetime voucher`
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) { showToast(data.error || 'Could not create voucher.', 'error'); return; }
+    const created = (data.codes && data.codes[0]) || '';
+    if (created) copyText(created, `${percent}% Lifetime voucher`);
+    showToast(`Created & copied ${created} (${percent}% off Lifetime)!`, 'success');
+    loadAdminVouchers();
+  }
+
+  async function createCustomVoucher(e) {
+    e.preventDefault();
+    const payload = {
+      discount_percent: parseInt(document.getElementById('vc-percent').value, 10),
+      tier_scope: document.getElementById('vc-scope').value,
+      code: document.getElementById('vc-code').value.trim(),
+      max_uses: parseInt(document.getElementById('vc-max-uses').value || '1', 10),
+      per_user_limit: 1,
+      count: parseInt(document.getElementById('vc-count').value || '1', 10),
+      expires_at: document.getElementById('vc-expires').value,
+      note: document.getElementById('vc-note').value.trim()
+    };
+    const res = await fetch('/api/admin/vouchers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok) { showToast(data.error || 'Could not create voucher.', 'error'); return; }
+    document.getElementById('vc-code').value = '';
+    document.getElementById('vc-note').value = '';
+    if (data.codes && data.codes.length === 1) {
+      copyText(data.codes[0], 'Voucher code');
+    }
+    showToast(data.message || 'Voucher created!', 'success');
+    loadAdminVouchers();
+  }
+
+  async function toggleVoucherActive(id, nextActive) {
+    const res = await fetch('/api/admin/vouchers/' + id, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_active: nextActive })
+    });
+    const data = await res.json();
+    if (!res.ok) { showToast(data.error || 'Update failed.', 'error'); return; }
+    showToast(data.message || 'Updated.', 'info');
+    loadAdminVouchers();
+  }
+
+  async function deleteVoucher(id, code) {
+    if (!confirm(`Delete voucher ${code}?`)) return;
+    const res = await fetch('/api/admin/vouchers/' + id, { method: 'DELETE' });
+    const data = await res.json();
+    if (!res.ok) { showToast(data.error || 'Delete failed.', 'error'); return; }
+    showToast(data.message || 'Deleted.', 'info');
+    loadAdminVouchers();
+  }
+
+  /* ─── ADMIN LOCK ─── */
+  async function lockAdminSession() {
+    try {
+      await fetch('/api/admin/lock', { method: 'POST' });
+      if (typeof showToast === 'function') showToast('Admin session locked.', 'info');
+      setTimeout(() => { window.location.href = '/products'; }, 400);
+    } catch (err) { window.location.href = '/products'; }
+  }
+
+  /* ─── PRODUCT & TIER MANAGEMENT ─── */
+  let adminCatalogCache = [];
+
+  async function loadProducts() {
+    const container = document.getElementById('admin-products-list');
+    if (!container) return;
+    try {
+      const res = await fetch('/api/admin/catalog');
+      if (!res.ok) return;
+      const data = await res.json();
+      adminCatalogCache = data.catalog || [];
+
+      if (!adminCatalogCache.length) {
+        container.innerHTML = '<div style="text-align:center; padding:32px; color:var(--text-muted);">No products yet. Click New Product to create one.</div>';
+        return;
+      }
+
+      container.innerHTML = adminCatalogCache.map(item => `
+        <div class="catalog-item-card" style="${item.is_active ? '' : 'opacity:0.65;'}">
+          <div class="catalog-item-head">
+            <div class="catalog-item-info">
+              <img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}" class="catalog-thumb" onerror="this.src='/static/images/product1.jpg'">
+              <div>
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                  <strong style="font-size:1rem; color:#fff;">${escapeHtml(item.title)}</strong>
+                  <span class="tag tag-product">${escapeHtml(item.platform)}</span>
+                  <span class="tag tag-user">${escapeHtml(item.category)}</span>
+                  ${item.is_active ? '<span class="tag tag-stock">ACTIVE</span>' : '<span class="tag tag-claimed">ARCHIVED</span>'}
+                </div>
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">${escapeHtml(item.description || 'No description')}</div>
+              </div>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button type="button" class="btn-ghost orange" onclick="openTierModal(${item.id})"><i class="fa-solid fa-plus"></i> Add Tier</button>
+              <button type="button" class="btn-ghost" onclick="openCatalogModal(${item.id})"><i class="fa-solid fa-pen"></i> Edit</button>
+              <button type="button" class="btn-ghost red" onclick="deleteCatalogItem(${item.id}, '${escapeHtml(item.title)}')"><i class="fa-solid fa-trash"></i> Delete</button>
+            </div>
+          </div>
+
+          <div style="overflow-x:auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Tier Name</th>
+                  <th>Duration</th>
+                  <th>Price</th>
+                  <th>Badge</th>
+                  <th>Stock</th>
+                  <th>Sold</th>
+                  <th>Status</th>
+                  <th style="text-align:right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${item.tiers && item.tiers.length ? item.tiers.map(t => `
+                  <tr style="${t.is_active ? '' : 'opacity:0.55;'}">
+                    <td class="bold">${escapeHtml(t.name)}</td>
+                    <td>${escapeHtml(t.duration)}</td>
+                    <td class="mono bold">${peso(t.price)}</td>
+                    <td>${t.badge ? `<span class="tag tag-product">${escapeHtml(t.badge)}</span>` : '<span class="muted">—</span>'}</td>
+                    <td class="mono">${t.stock}</td>
+                    <td class="mono">${t.sold}</td>
+                    <td>${t.is_active ? '<span class="tag tag-stock">ACTIVE</span>' : '<span class="tag tag-claimed">ARCHIVED</span>'}</td>
+                    <td style="text-align:right; white-space:nowrap;">
+                      <button type="button" class="btn-ghost" style="padding:4px 10px; font-size:0.74rem;" onclick="openTierModal(${item.id}, ${t.id})"><i class="fa-solid fa-pen"></i></button>
+                      <button type="button" class="btn-ghost red" style="padding:4px 10px; font-size:0.74rem;" onclick="deleteTierItem(${t.id}, '${escapeHtml(t.name)}')"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                  </tr>
+                `).join('') : '<tr><td colspan="8" style="padding:18px; color:var(--text-muted);">No tiers yet. Click Add Tier above.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `).join('');
+    } catch (e) {
+      if (typeof showToast === 'function') showToast('Failed to load catalog.', 'error');
+    }
+  }
+
+  function updateCatImgPreview(url) {
+    const img = document.getElementById('cat-image-preview');
+    if (!img) return;
+    if (url) { img.src = url; img.style.display = 'block'; }
+    else { img.style.display = 'none'; }
+  }
+
+  function openCatalogModal(itemId = null) {
+    const modal = document.getElementById('catalog-modal');
+    const item = itemId ? adminCatalogCache.find(c => c.id === itemId) : null;
+    document.getElementById('catalog-modal-title').innerText = item ? 'Edit Product' : 'New Product';
+    document.getElementById('cat-edit-id').value = item ? item.id : '';
+    document.getElementById('cat-title').value = item ? item.title : '';
+    document.getElementById('cat-category').value = item ? item.category : 'GAMES';
+    document.getElementById('cat-platform').value = item ? item.platform : 'ANDROID';
+    document.getElementById('cat-image-url').value = item ? item.image_url : '/static/images/product1.jpg';
+    document.getElementById('cat-description').value = item ? (item.description || '') : '';
+    document.getElementById('cat-active').checked = item ? !!item.is_active : true;
+    updateCatImgPreview(document.getElementById('cat-image-url').value);
+    modal.classList.add('active');
+  }
+
+  function closeCatalogModal() {
+    document.getElementById('catalog-modal').classList.remove('active');
+  }
+
+  async function uploadCatalogImage(input) {
+    if (!input.files || !input.files[0]) return;
+    const fd = new FormData();
+    fd.append('file', input.files[0]);
+    try {
+      const res = await fetch('/api/admin/upload-image', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.error || 'Upload failed', 'error'); return; }
+      document.getElementById('cat-image-url').value = data.url;
+      updateCatImgPreview(data.url);
+      showToast('Image uploaded!', 'success');
+    } catch (e) {
+      showToast('Image upload failed.', 'error');
+    } finally {
+      input.value = '';
+    }
+  }
+
+  async function saveCatalogItem(e) {
+    e.preventDefault();
+    const editId = document.getElementById('cat-edit-id').value;
+    const payload = {
+      title: document.getElementById('cat-title').value.trim(),
+      category: document.getElementById('cat-category').value.trim(),
+      platform: document.getElementById('cat-platform').value.trim(),
+      image_url: document.getElementById('cat-image-url').value.trim(),
+      description: document.getElementById('cat-description').value.trim(),
+      is_active: document.getElementById('cat-active').checked ? 1 : 0
+    };
+    const url = editId ? `/api/admin/catalog/${editId}` : '/api/admin/catalog';
+    const method = editId ? 'PUT' : 'POST';
+    const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const data = await res.json();
+    if (!res.ok) { showToast(data.error || 'Could not save product.', 'error'); return; }
+    showToast(data.message || 'Saved.', 'success');
+    closeCatalogModal();
+    loadProducts();
+    loadAdminOverview();
+  }
+
+  async function deleteCatalogItem(id, title) {
+    if (!confirm(`Delete product "${title}"? Products with existing orders or keys will be archived instead.`)) return;
+    const res = await fetch(`/api/admin/catalog/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (!res.ok) { showToast(data.error || 'Could not delete.', 'error'); return; }
+    showToast(data.message || (data.soft ? 'Product archived.' : 'Product deleted.'), data.soft ? 'info' : 'success');
+    loadProducts();
+    loadAdminOverview();
+  }
+
+  function openTierModal(catalogId, tierId = null) {
+    const modal = document.getElementById('tier-modal');
+    const cat = adminCatalogCache.find(c => c.id === catalogId);
+    const tier = (cat && tierId) ? (cat.tiers || []).find(t => t.id === tierId) : null;
+    document.getElementById('tier-modal-title').innerText = tier ? 'Edit Tier' : 'Add Tier';
+    document.getElementById('tier-edit-id').value = tier ? tier.id : '';
+    document.getElementById('tier-catalog-id').value = catalogId;
+    document.getElementById('tier-name').value = tier ? tier.name : '';
+    document.getElementById('tier-duration').value = tier ? tier.duration : '';
+    document.getElementById('tier-price').value = tier ? tier.price : '';
+    document.getElementById('tier-badge').value = tier ? (tier.badge || '') : '';
+    document.getElementById('tier-features').value = tier && Array.isArray(tier.features) ? tier.features.join('\n') : '';
+    document.getElementById('tier-active').checked = tier ? !!tier.is_active : true;
+    modal.classList.add('active');
+  }
+
+  function closeTierModal() {
+    document.getElementById('tier-modal').classList.remove('active');
+  }
+
+  async function saveTierItem(e) {
+    e.preventDefault();
+    const editId = document.getElementById('tier-edit-id').value;
+    const payload = {
+      catalog_id: parseInt(document.getElementById('tier-catalog-id').value, 10),
+      name: document.getElementById('tier-name').value.trim(),
+      duration: document.getElementById('tier-duration').value.trim(),
+      price: parseFloat(document.getElementById('tier-price').value),
+      badge: document.getElementById('tier-badge').value.trim(),
+      features: document.getElementById('tier-features').value,
+      is_active: document.getElementById('tier-active').checked ? 1 : 0
+    };
+    const url = editId ? `/api/admin/products/${editId}` : '/api/admin/products';
+    const method = editId ? 'PUT' : 'POST';
+    const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const data = await res.json();
+    if (!res.ok) { showToast(data.error || 'Could not save tier.', 'error'); return; }
+    showToast(data.message || 'Tier saved.', 'success');
+    closeTierModal();
+    loadProducts();
+    loadAdminOverview();
+  }
+
+  async function deleteTierItem(id, name) {
+    if (!confirm(`Delete tier "${name}"? Tiers with existing orders or keys will be archived instead.`)) return;
+    const res = await fetch(`/api/admin/products/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (!res.ok) { showToast(data.error || 'Could not delete tier.', 'error'); return; }
+    showToast(data.message || (data.soft ? 'Tier archived.' : 'Tier deleted.'), data.soft ? 'info' : 'success');
+    loadProducts();
+    loadAdminOverview();
+  }
+
+  /* ─── ORDERS LIST & DRAWER ─── */
+  let ordersState = { page: 1, pages: 1, total: 0 };
+  let ordersSearchTimer = null;
+
+  async function loadOrdersTabInit() {
+    const sel = document.getElementById('orders-product-filter');
+    if (sel && sel.options.length <= 1) {
+      try {
+        const res = await fetch('/api/admin/catalog');
+        if (res.ok) {
+          const data = await res.json();
+          const opts = ['<option value="all">All tiers</option>'];
+          (data.catalog || []).forEach(c => {
+            (c.tiers || []).forEach(t => {
+              opts.push(`<option value="${t.id}">${escapeHtml(t.name)} (${escapeHtml(t.duration)})</option>`);
+            });
+          });
+          sel.innerHTML = opts.join('');
+        }
+      } catch (e) {}
+    }
+    loadOrders(ordersState.page || 1);
+  }
+
+  function onOrdersSearchInput() {
+    clearTimeout(ordersSearchTimer);
+    ordersSearchTimer = setTimeout(() => loadOrders(1), 300);
+  }
+
+  function resetOrdersFilters() {
+    document.getElementById('orders-search').value = '';
+    document.getElementById('orders-product-filter').value = 'all';
+    document.getElementById('orders-date-from').value = '';
+    document.getElementById('orders-date-to').value = '';
+    loadOrders(1);
+  }
+
+  function maskKey(k) {
+    const s = String(k || '');
+    if (s.length <= 8) return s;
+    return s.slice(0, 4) + '••••' + s.slice(-4);
+  }
+
+  async function loadOrders(page = 1) {
+    const search = encodeURIComponent((document.getElementById('orders-search').value || '').trim());
+    const productId = encodeURIComponent(document.getElementById('orders-product-filter').value || 'all');
+    const dateFrom = encodeURIComponent(document.getElementById('orders-date-from').value || '');
+    const dateTo = encodeURIComponent(document.getElementById('orders-date-to').value || '');
+
+    const tbody = document.getElementById('admin-orders-tbody');
+    if (!tbody) return;
+
+    try {
+      const res = await fetch(`/api/admin/orders?search=${search}&product_id=${productId}&date_from=${dateFrom}&date_to=${dateTo}&page=${page}&per_page=25`);
+      if (!res.ok) return;
+      const data = await res.json();
+      ordersState = { page: data.page, pages: data.pages, total: data.total };
+
+      document.getElementById('orders-summary-count').innerText = `${data.total} order${data.total === 1 ? '' : 's'}`;
+      document.getElementById('orders-summary-revenue').innerText = peso(data.revenue_sum || 0);
+      document.getElementById('orders-page-info').innerText = `Page ${data.page} of ${data.pages} (${data.total} total)`;
+      document.getElementById('orders-prev-btn').disabled = data.page <= 1;
+      document.getElementById('orders-next-btn').disabled = data.page >= data.pages;
+
+      const rows = data.orders || [];
+      tbody.innerHTML = rows.length ? rows.map(o => `
+        <tr class="order-row-clickable" onclick="openOrderDrawer('${escapeHtml(o.order_id)}')">
+          <td class="mono bold" style="color:#d4ff33;">${escapeHtml(o.order_id)}</td>
+          <td>
+            <div class="bold">${escapeHtml(o.username)}</div>
+            <div class="muted" style="font-size:0.74rem;">${escapeHtml(o.email)}</div>
+          </td>
+          <td>
+            ${escapeHtml(o.product_name)}
+            ${o.voucher_code ? `<span class="tag tag-product" style="margin-left:6px; font-size:0.66rem;">${escapeHtml(o.voucher_code)}</span>` : ''}
+          </td>
+          <td class="mono bold">${peso(o.price)}</td>
+          <td class="mono muted">${escapeHtml(maskKey(o.license_key))}</td>
+          <td class="muted">${formatDateTime(o.created_at)}</td>
+        </tr>
+      `).join('') : '<tr><td colspan="6" style="padding:28px; text-align:center; color:var(--text-muted);">No orders match these filters.</td></tr>';
+    } catch (e) {
+      if (typeof showToast === 'function') showToast('Failed to load orders.', 'error');
+    }
+  }
+
+  function changeOrdersPage(delta) {
+    const next = Math.max(1, Math.min(ordersState.pages || 1, (ordersState.page || 1) + delta));
+    if (next !== ordersState.page) loadOrders(next);
+  }
+
+  async function openOrderDrawer(orderId) {
+    document.getElementById('order-drawer-backdrop').classList.add('open');
+    document.getElementById('order-drawer').classList.add('open');
+    document.getElementById('drawer-order-id').innerText = orderId;
+    const body = document.getElementById('order-drawer-body');
+    body.innerHTML = '<div style="color:var(--text-muted);">Loading order details...</div>';
+
+    try {
+      const res = await fetch(`/api/admin/orders/${encodeURIComponent(orderId)}`);
+      const data = await res.json();
+      if (!res.ok) { body.innerHTML = `<div style="color:#f87171;">${escapeHtml(data.error || 'Failed to load')}</div>`; return; }
+
+      const o = data.order;
+      const b = data.buyer;
+      const k = data.key_status;
+      const r = data.referral;
+
+      body.innerHTML = `
+        <div class="stat-card" style="padding:16px;">
+          <div class="label">Product &amp; Amount</div>
+          <div style="font-weight:700; font-size:1.05rem; color:#fff; margin-top:4px;">${escapeHtml(o.product_name)}</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+            <span class="mono" style="font-size:1.2rem; font-weight:700; color:#34d399;">${peso(o.price)}</span>
+            <span class="muted" style="font-size:0.78rem;">${formatDateTime(o.created_at)}</span>
+          </div>
+          ${o.voucher_code ? `<div style="margin-top:8px; font-size:0.8rem; color:#d4ff33;">Voucher: <strong class="mono">${escapeHtml(o.voucher_code)}</strong> (-${peso(o.discount_amount || 0)})</div>` : ''}
+        </div>
+
+        <div class="stat-card" style="padding:16px;">
+          <div class="label">Delivered License Key</div>
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:8px; background:#090a09; border:1px solid var(--border-subtle); border-radius:8px; padding:10px 12px;">
+            <span class="mono" style="color:#d4ff33; word-break:break-all; font-size:0.88rem;">${escapeHtml(o.license_key)}</span>
+            <button type="button" class="btn-ghost orange" onclick="copyText('${escapeHtml(o.license_key)}', 'License key')">Copy</button>
+          </div>
+          <div style="font-size:0.78rem; color:var(--text-muted); margin-top:8px;">
+            Inventory status: ${k ? (k.is_used ? '<span class="tag tag-claimed">CLAIMED</span>' : '<span class="tag tag-stock">AVAILABLE</span>') : 'Not found in inventory'}
+          </div>
+        </div>
+
+        <div class="stat-card" style="padding:16px;">
+          <div class="label">Buyer</div>
+          ${b ? `
+            <div style="margin-top:6px; font-weight:700; color:#fff;">${escapeHtml(b.username)} <span class="muted" style="font-weight:400;">(#${b.id})</span></div>
+            <div style="font-size:0.82rem; color:var(--text-muted);">${escapeHtml(b.email)}</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:12px; font-size:0.78rem;">
+              <div><div class="muted">Balance</div><div class="mono bold">${peso(b.balance)}</div></div>
+              <div><div class="muted">Orders</div><div class="mono bold">${b.total_orders}</div></div>
+              <div><div class="muted">Spent</div><div class="mono bold">${peso(b.total_spent)}</div></div>
+            </div>
+          ` : '<div style="color:var(--text-muted); margin-top:6px;">User record unavailable</div>'}
+        </div>
+
+        ${r ? `
+          <div class="stat-card" style="padding:16px; border-color:rgba(52,211,153,0.35);">
+            <div class="label">Referral Commission</div>
+            <div style="margin-top:6px; font-size:0.88rem; color:#fff;">
+              Referrer: <strong>${escapeHtml(r.referrer_username)}</strong>
+            </div>
+            <div style="margin-top:4px; font-size:0.84rem; color:#34d399; font-family:var(--font-mono);">
+              +${peso(r.reward)} (${r.percent}%)
+            </div>
+          </div>
+        ` : ''}
+      `;
+    } catch (e) {
+      body.innerHTML = '<div style="color:#f87171;">Error loading order details.</div>';
+    }
+  }
+
+  function closeOrderDrawer() {
+    document.getElementById('order-drawer-backdrop').classList.remove('open');
+    document.getElementById('order-drawer').classList.remove('open');
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeOrderDrawer();
+      closeCatalogModal();
+      closeTierModal();
+    }
+  });
+
+  /* ─── REFERRALS ADMIN ─── */
+  async function loadAdminReferrals() {
+    try {
+      const res = await fetch('/api/admin/referrals');
+      if (!res.ok) return;
+      const data = await res.json();
+
+      const s = data.settings || {};
+      const t = data.totals || {};
+      document.getElementById('adm-ref-total-paid').innerText = peso(t.total_paid || 0);
+      document.getElementById('adm-ref-referred-users').innerText = t.referred_users || 0;
+      document.getElementById('adm-ref-active-referrers').innerText = t.active_referrers || 0;
+      document.getElementById('adm-ref-enabled').checked = !!s.enabled;
+      document.getElementById('adm-ref-percent').value = s.percent !== undefined ? s.percent : 5;
+
+      const top = data.top_referrers || [];
+      document.getElementById('adm-ref-top-tbody').innerHTML = top.length ? top.map(r => `
+        <tr>
+          <td class="bold">${escapeHtml(r.username)}</td>
+          <td class="mono muted">${escapeHtml(r.code || '')}</td>
+          <td class="mono">${r.referred_count}</td>
+          <td class="mono bold" style="color:#34d399;">${peso(r.earned)}</td>
+        </tr>
+      `).join('') : '<tr><td colspan="4" style="padding:20px; color:var(--text-muted);">No referrers yet.</td></tr>';
+
+      const rw = data.rewards || [];
+      document.getElementById('adm-ref-rewards-tbody').innerHTML = rw.length ? rw.map(r => `
+        <tr>
+          <td class="mono" style="color:#d4ff33;">${escapeHtml(r.order_id)}</td>
+          <td class="bold">${escapeHtml(r.referrer_username)}</td>
+          <td>${escapeHtml(r.referred_username)}</td>
+          <td class="mono bold" style="color:#34d399;">+${peso(r.reward)}</td>
+        </tr>
+      `).join('') : '<tr><td colspan="4" style="padding:20px; color:var(--text-muted);">No commissions paid yet.</td></tr>';
+    } catch (e) {
+      if (typeof showToast === 'function') showToast('Failed to load referrals.', 'error');
+    }
+  }
+
+  async function saveReferralSettings(e) {
+    e.preventDefault();
+    const enabled = document.getElementById('adm-ref-enabled').checked;
+    const percent = parseFloat(document.getElementById('adm-ref-percent').value);
+    const res = await fetch('/api/admin/referrals/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled, percent })
+    });
+    const data = await res.json();
+    if (!res.ok) { showToast(data.error || 'Failed to save settings.', 'error'); return; }
+    showToast(data.message || 'Referral settings saved.', 'success');
+    loadAdminReferrals();
+  }
+</script>
+</body>
+</html>

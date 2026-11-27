@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>Owner Gate | Kova Security</title>
+  <link rel="icon" type="image/jpeg" href="/static/images/brand_logo.jpg">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .gate-card {
+      width: 100%;
+      max-width: 440px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 36px 32px;
+      box-shadow: var(--shadow-card);
+      text-align: center;
+    }
+    .gate-icon {
+      width: 58px; height: 58px;
+      border-radius: 10px;
+      background: var(--accent);
+      color: var(--accent-ink);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+      margin: 0 auto 18px;
+      box-shadow: 0 3px 0 var(--accent-bevel), 0 12px 28px var(--accent-glow);
+    }
+    .gate-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em;
+      color: var(--accent);
+      background: var(--accent-faint);
+      border: 1px solid var(--accent-border);
+      padding: 4px 10px;
+      border-radius: 4px;
+      margin-bottom: 14px;
+      text-transform: uppercase;
+    }
+    .gate-input-wrap {
+      position: relative;
+      margin: 22px 0 16px;
+      text-align: left;
+    }
+    .gate-input {
+      width: 100%;
+      height: 46px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 0 44px 0 14px;
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 0.98rem;
+      letter-spacing: 2px;
+      outline: none;
+      transition: var(--transition);
+    }
+    .gate-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-faint);
+    }
+    .gate-footer {
+      margin-top: 22px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line-separator);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="gate-card unfold-in">
+    <img src="/static/images/brand_logo.jpg" alt="Kova Logo" style="width: 64px; height: 64px; border-radius: 12px; object-fit: cover; margin: 0 auto 18px; display: block; border: 1px solid var(--accent-border); box-shadow: 0 8px 26px rgba(0, 0, 0, 0.7);">
+    <div class="gate-badge"><i class="fa-solid fa-lock"></i> Owner Verification</div>
+
+    <h2 style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; margin-bottom: 6px;">Admin Gate</h2>
+    <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">Sign in with the owner account first, then enter the master passkey to unlock the admin panel.</p>
+
+    <form onsubmit="handleUnlock(event)">
+      <div class="gate-input-wrap">
+        <label class="form-label" for="gate-passkey">Master Security Passkey</label>
+        <input type="password" id="gate-passkey" class="gate-input" placeholder="••••••••••••" required autocomplete="current-password" autofocus>
+        <button type="button" onclick="togglePass()" style="position: absolute; right: 12px; top: 36px; background: none; border: none; color: var(--text-dark); cursor: pointer;">
+          <i id="eye-icon" class="fa-solid fa-eye"></i>
+        </button>
+      </div>
+
+      <div id="gate-error" style="display: none; background: var(--danger-faint); border: 1px solid rgba(248, 113, 113, 0.35); color: var(--danger); padding: 10px; border-radius: var(--radius-sm); font-size: 0.82rem; font-weight: 600; margin-bottom: 14px;"></div>
+
+      <button type="submit" id="btn-submit-gate" class="btn btn-deposit btn-block btn-lg">
+        <i class="fa-solid fa-key"></i> Verify &amp; Unlock
+      </button>
+    </form>
+
+    <div class="gate-footer">
+      <a href="/products" style="color: var(--text-muted); display: inline-flex; align-items: center; gap: 6px;">
+        <i class="fa-solid fa-arrow-left"></i> Storefront
+      </a>
+      <span style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-dark);">
+        <i class="fa-solid fa-lock"></i> PROTECTED
+      </span>
+    </div>
+  </div>
+
+  <div id="toast-container" class="toast-box"></div>
+
+  <script>
+    function togglePass() {
+      const input = document.getElementById('gate-passkey');
+      const icon = document.getElementById('eye-icon');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fa-solid fa-eye-slash';
+      } else {
+        input.type = 'password';
+        icon.className = 'fa-solid fa-eye';
+      }
+    }
+
+    async function handleUnlock(e) {
+      e.preventDefault();
+      const passkey = document.getElementById('gate-passkey').value;
+      const btn = document.getElementById('btn-submit-gate');
+      const errBox = document.getElementById('gate-error');
+
+      errBox.style.display = 'none';
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Verifying...';
+
+      try {
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        const res = await fetch('/api/admin/verify-passkey', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+          body: JSON.stringify({ passkey })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          btn.innerHTML = '<i class="fa-solid fa-check"></i> Access Granted';
+          setTimeout(() => { window.location.reload(); }, 400);
+        } else {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-key"></i> Verify &amp; Unlock';
+          errBox.innerText = data.error || 'Access denied.';
+          errBox.style.display = 'block';
+          document.getElementById('gate-passkey').value = '';
+          document.getElementById('gate-passkey').focus();
+        }
+      } catch (err) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-key"></i> Verify &amp; Unlock';
+        errBox.innerText = 'Security verification failed. Please try again.';
+        errBox.style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>Product Detail | Kova Store</title>
+  <link rel="icon" type="image/jpeg" href="/static/images/brand_logo.jpg">
+  <meta name="description" content="Choose duration and instantly receive your Kova license key.">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  {% set active_page = 'products' %}
+  {% set show_font_picker = True %}
+  {% include 'partials/_header.html' %}
+
+  <div class="page-wrap">
+    <div class="container">
+
+      <div class="product-detail-split">
+        <!-- Left Column: 3D Widescreen Showcase + Hardware Specs -->
+        <div class="unfold-in">
+          <div class="widescreen-product-banner tilt-3d" data-tilt-max="4" data-tilt-lift="-3" onclick="openImageLightbox(document.getElementById('detail-banner-img').src, document.getElementById('detail-title-heading').innerText)">
+            <div class="banner-top-tags depth-2">
+              <span class="live-dot-pill"><span class="live-pulse-dot"></span> LIVE OVERLAY</span>
+              <span class="platform-pill"><i class="fa-brands fa-android"></i> ANDROID &middot; ROOT &amp; NON-ROOT</span>
+            </div>
+            <div class="banner-zoom-pill depth-2">
+              <i class="fa-solid fa-expand"></i> Full HD
+            </div>
+            <img id="detail-banner-img" src="/static/images/ovk_hax.jpg" alt="Preview" class="product-banner-img" onerror="this.src='/static/images/ovk_hax.jpg'">
+            <div class="product-banner-overlay-title depth-1">
+              <h1 class="product-main-heading" id="detail-title-heading">OVK HAX - Call of Duty Mobile</h1>
+              <p class="product-sub-caption" id="detail-sub-caption">Official build &middot; 185 FPS optimize mode &middot; Radial wheel menu &middot; Stream-proof overlay</p>
+            </div>
+          </div>
+
+          <div class="ovk-specs-card unfold-in delay-1">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+              <span class="duration-section-heading" style="margin-bottom: 0;">BUILD SPECIFICATIONS</span>
+              <span class="chip success">VERIFIED ONLINE</span>
+            </div>
+            <div class="specs-grid">
+              <div class="spec-box">
+                <span class="spec-kicker"><i class="fa-solid fa-shield-halved" style="color:var(--success); margin-right:5px;"></i> STATUS</span>
+                <span class="spec-val green">All Modules Ready</span>
+                <span class="spec-sub">Active protection &amp; seasonal patch sync</span>
+              </div>
+              <div class="spec-box">
+                <span class="spec-kicker"><i class="fa-solid fa-gauge-high" style="color:var(--accent); margin-right:5px;"></i> FRAMERATE</span>
+                <span class="spec-val volt">185 FPS Mode</span>
+                <span class="spec-sub">Low-overhead render pipeline for locked frames</span>
+              </div>
+              <div class="spec-box">
+                <span class="spec-kicker"><i class="fa-solid fa-compass" style="color:var(--text-white); margin-right:5px;"></i> OVERLAY</span>
+                <span class="spec-val">Radial Wheel Menu</span>
+                <span class="spec-sub">Touch-tuned Aimbot, ESP, Radar &amp; Configs</span>
+              </div>
+              <div class="spec-box">
+                <span class="spec-kicker"><i class="fa-solid fa-eye-slash" style="color:var(--warning); margin-right:5px;"></i> RECORDING</span>
+                <span class="spec-val">Hide Record Mode</span>
+                <span class="spec-sub">Clean capture output for clips &amp; streams</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Sticky Column: Tier Selector, Voucher & Instant Checkout -->
+        <aside class="product-checkout-rail unfold-in delay-2">
+          <div class="duration-selector-card">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+              <div class="duration-section-heading" style="margin-bottom: 0;">SELECT LICENSE TIER</div>
+              <span style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted);">INSTANT DISPATCH</span>
+            </div>
+
+            <div class="duration-options-list" id="duration-options-list">
+              <div style="text-align: center; color: var(--text-dark); padding: 30px;">Loading tiers...</div>
+            </div>
+
+            <!-- Lifetime Voucher Input -->
+            <div id="detail-voucher-box" style="display: none; margin-bottom: 14px; padding: 14px 16px; border-radius: var(--radius-md); background: var(--bg-subtle); border: 1px dashed var(--accent-border);">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px;">
+                <span style="font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--accent);">
+                  <i class="fa-solid fa-ticket" style="margin-right: 5px;"></i> Lifetime Key Voucher
+                </span>
+                <button type="button" id="btn-clear-voucher" onclick="clearDetailVoucher()" style="display: none; background: none; border: none; color: var(--text-muted); font-size: 0.74rem; cursor: pointer;">Remove</button>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <input type="text" id="detail-voucher-input" class="form-input" style="min-height: 40px; font-family: var(--font-mono); text-transform: uppercase;" placeholder="KOVA-LIFE50-...">
+                <button type="button" id="btn-apply-voucher" class="btn btn-orange-outline" onclick="applyDetailVoucher()">Apply</button>
+              </div>
+              <div id="detail-voucher-status" style="font-size: 0.78rem; margin-top: 8px;"></div>
+            </div>
+
+            <div class="selected-summary-bar">
+              <div>
+                <div class="selected-summary-label">SELECTED TIER</div>
+                <div class="selected-summary-name" id="selected-summary-name">—</div>
+              </div>
+              <div style="text-align: right;">
+                <div id="selected-summary-orig" style="display: none; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-dark); text-decoration: line-through;"></div>
+                <div class="selected-summary-price" id="selected-summary-price">₱0.00</div>
+              </div>
+            </div>
+
+            <div class="product-action-row">
+              <div class="product-user-balance">
+                Balance: <span id="detail-user-balance-val">0.00 Credits</span>
+              </div>
+              <button class="btn btn-sm btn-orange-outline" onclick="openDepositModal(getEffectivePrice())">
+                <i class="fa-solid fa-plus"></i> Add Funds
+              </button>
+            </div>
+
+            <button id="btn-main-action" class="btn-purchase-action insufficient" onclick="handleMainActionClick()">
+              <i class="fa-solid fa-bolt"></i> TOP-UP &amp; BUY KEY
+            </button>
+
+            <div class="trust-badges-row">
+              <div class="trust-badge-item"><i class="fa-solid fa-bolt" style="color: var(--accent);"></i> Instant Key</div>
+              <div class="trust-badge-item"><i class="fa-solid fa-lock" style="color: var(--success);"></i> PayMongo</div>
+              <div class="trust-badge-item"><i class="fa-brands fa-telegram" style="color: var(--text-white);"></i> @kovalucy</div>
+            </div>
+
+            <div id="delivered-key-card-box" style="display: none; margin-top: 20px; background: var(--bg-subtle); border: 1px solid var(--accent-border); border-radius: var(--radius-md); padding: 18px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                <span class="chip accent"><i class="fa-solid fa-check"></i> KEY ISSUED</span>
+                <span id="card-order-id" style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--text-muted);"></span>
+              </div>
+
+              <div style="background: #090a09; border: 1px dashed var(--accent-border); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+                <span id="card-key-display" style="font-family: var(--font-mono); font-size: 1rem; font-weight: 700; color: var(--accent); word-break: break-all;"></span>
+                <button id="btn-copy-card-key" onclick="copyCardKey()" class="btn btn-deposit btn-sm">
+                  <i class="fa-solid fa-copy"></i> Copy
+                </button>
+              </div>
+
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <a href="https://t.me/ovkfiles" target="_blank" class="btn btn-deposit btn-sm" style="flex: 1;">
+                  <i class="fa-brands fa-telegram"></i> Loader Files
+                </a>
+                <a href="/dashboard" class="btn btn-withdraw btn-sm" style="flex: 1;">
+                  Open Vault &rarr;
+                </a>
+              </div>
+            </div>
+
+          </div>
+        </aside>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="key-success-modal">
+    <div class="modal-box" style="text-align: center; max-width: 460px;">
+      <button class="modal-close-btn" onclick="document.getElementById('key-success-modal').classList.remove('active')">&times;</button>
+      <div style="width: 52px; height: 52px; border-radius: var(--radius-sm); background: var(--accent); color: var(--accent-ink); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 800; margin: 0 auto 16px;">
+        <i class="fa-solid fa-check"></i>
+      </div>
+      <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; margin-bottom: 6px;">License Key Issued</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">Copy your key below and grab the latest loader APK from the files channel.</p>
+
+      <div style="background: #090a09; border: 1px dashed var(--accent-border); border-radius: var(--radius-sm); padding: 15px; margin-bottom: 16px;">
+        <div id="delivered-key-text" style="font-family: var(--font-mono); font-size: 1.05rem; font-weight: 700; color: var(--accent); word-break: break-all;"></div>
+      </div>
+
+      <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+        <button class="btn btn-deposit" style="flex: 1;" onclick="copyDeliveredKey()"><i class="fa-solid fa-copy"></i> Copy Key</button>
+        <a href="https://t.me/ovkfiles" target="_blank" class="btn btn-withdraw" style="flex: 1;"><i class="fa-brands fa-telegram"></i> Files Channel</a>
+      </div>
+
+      <div style="display: flex; gap: 10px;">
+        <a href="https://t.me/kovalucy" target="_blank" class="btn btn-ghost" style="flex: 1; font-size: 0.78rem;">Support</a>
+        <a href="/dashboard" class="btn btn-ghost" style="flex: 1; font-size: 0.78rem;">Back to Vault</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="lightbox-modal" id="lightbox-modal" onclick="closeImageLightbox()" style="display:none;">
+    <div class="lightbox-content" onclick="event.stopPropagation()">
+      <button type="button" class="lightbox-close" onclick="closeImageLightbox()">&times;</button>
+      <img id="lightbox-img" src="/static/images/ovk_hax.jpg" alt="Preview HD" class="lightbox-img">
+      <div id="lightbox-caption" class="lightbox-caption">In-Game Overlay Preview</div>
+    </div>
+  </div>
+
+  {% include 'partials/_modals.html' %}
+  <script src="/static/js/app.js"></script>
+  <script>
+    const productIdParam = {{ item_id|tojson }};
+    let currentItem = null;
+    let selectedTier = null;
+    let currentUserBalance = 0;
+    let appliedVoucher = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadProductDetailPage();
+    });
+
+    function isTierLifetime(tier) {
+      if (!tier) return false;
+      return /lifetime/i.test(tier.duration || '') || /lifetime/i.test(tier.name || '');
+    }
+
+    function getEffectivePrice() {
+      if (!selectedTier) return 100;
+      return appliedVoucher ? parseFloat(appliedVoucher.final_price) : parseFloat(selectedTier.price);
+    }
+
+    async function loadProductDetailPage() {
+      try {
+        const res = await fetch(`/api/catalog/${productIdParam}`);
+        if (!res.ok) {
+          window.location.href = '/products';
+          return;
+        }
+        const data = await res.json();
+        currentItem = data.product;
+
+        document.getElementById('detail-title-heading').innerText = currentItem.title;
+        if (currentItem.description) {
+          document.getElementById('detail-sub-caption').innerText = currentItem.description.replace(/119\s*FPS/gi, '185 FPS');
+        }
+        if (currentItem.image_url) {
+          document.getElementById('detail-banner-img').src = currentItem.image_url;
+        }
+
+        await refreshUserBalance();
+        renderTierList();
+      } catch (err) {
+        showToast('Error loading product details', 'error');
+      }
+    }
+
+    async function refreshUserBalance() {
+      try {
+        const authRes = await fetch('/api/auth/me');
+        const authData = await authRes.json();
+        if (authData.authenticated) {
+          currentUserBalance = parseFloat(authData.user.balance) || 0;
+          const balEl = document.getElementById('detail-user-balance-val');
+          if (balEl) balEl.innerText = `${currentUserBalance.toFixed(2)} Credits`;
+        }
+      } catch (e) {}
+    }
+
+    function renderTierList() {
+      const container = document.getElementById('duration-options-list');
+      if (!currentItem || !currentItem.options || currentItem.options.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-dark); text-align: center; padding: 20px;">No options available.</p>';
+        return;
+      }
+
+      if (!selectedTier) {
+        selectedTier = currentItem.options[0];
+      } else {
+        const refreshed = currentItem.options.find(o => o.id === selectedTier.id);
+        if (refreshed) selectedTier = refreshed;
+      }
+
+      container.innerHTML = currentItem.options.map(opt => {
+        const isSelected = selectedTier && selectedTier.id === opt.id;
+        const isOut = opt.stock <= 0;
+        const stockLabel = isOut ? 'Out of stock' : `${opt.stock} in stock`;
+        const stockClass = isOut ? 'out-of-stock' : '';
+        const lifeTag = isTierLifetime(opt) ? '<span class="chip accent" style="margin-left:6px; font-size:0.62rem;">Voucher Ready</span>' : '';
+
+        return `
+          <div class="duration-card-item ${isSelected ? 'selected' : ''}" onclick="selectTierCard(${opt.id})">
+            <div class="duration-card-left">
+              <div class="custom-radio"><div class="custom-radio-dot"></div></div>
+              <div>
+                <div class="duration-item-name">${escapeHtml(opt.duration)} ${lifeTag}</div>
+                <div class="duration-item-sub">${escapeHtml(opt.badge || opt.duration.toLowerCase())}</div>
+              </div>
+            </div>
+            <div class="duration-card-right">
+              <div class="duration-item-price">₱${opt.price.toFixed(2)}</div>
+              <div class="duration-item-stock ${stockClass}">${stockLabel}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      updateActionState();
+    }
+
+    function selectTierCard(tierId) {
+      const tier = currentItem.options.find(o => o.id === tierId);
+      if (tier) {
+        if (appliedVoucher && appliedVoucher.tier_scope === 'lifetime' && !isTierLifetime(tier)) {
+          appliedVoucher = null;
+          document.getElementById('detail-voucher-status').innerHTML = '';
+          document.getElementById('btn-clear-voucher').style.display = 'none';
+        }
+        selectedTier = tier;
+        renderTierList();
+      }
+    }
+
+    async function applyDetailVoucher() {
+      if (!selectedTier) return;
+      const input = document.getElementById('detail-voucher-input');
+      const statusEl = document.getElementById('detail-voucher-status');
+      const code = (input.value || '').trim();
+      if (!code) {
+        statusEl.innerHTML = '<span style="color:var(--danger);">Enter a voucher code first.</span>';
+        return;
+      }
+
+      const btn = document.getElementById('btn-apply-voucher');
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/voucher/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, product_id: selectedTier.id })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          appliedVoucher = null;
+          statusEl.innerHTML = `<span style="color:var(--danger);"><i class="fa-solid fa-circle-xmark"></i> ${escapeHtml(data.error || 'Invalid voucher')}</span>`;
+          document.getElementById('btn-clear-voucher').style.display = 'none';
+          updateActionState();
+          return;
+        }
+        appliedVoucher = data;
+        statusEl.innerHTML = `<span style="color:var(--success); font-weight:700;"><i class="fa-solid fa-circle-check"></i> ${escapeHtml(data.code)} applied: ${data.discount_percent}% OFF (-₱${data.discount_amount.toFixed(2)})</span>`;
+        document.getElementById('btn-clear-voucher').style.display = 'inline-block';
+        updateActionState();
+      } catch (err) {
+        statusEl.innerHTML = '<span style="color:var(--danger);">Network error validating voucher.</span>';
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function clearDetailVoucher() {
+      appliedVoucher = null;
+      document.getElementById('detail-voucher-input').value = '';
+      document.getElementById('detail-voucher-status').innerHTML = '';
+      document.getElementById('btn-clear-voucher').style.display = 'none';
+      updateActionState();
+    }
+
+    function updateActionState() {
+      if (!selectedTier) return;
+
+      const vBox = document.getElementById('detail-voucher-box');
+      if (vBox) vBox.style.display = isTierLifetime(selectedTier) ? 'block' : 'none';
+
+      const effectivePrice = getEffectivePrice();
+      const origEl = document.getElementById('selected-summary-orig');
+      if (appliedVoucher && effectivePrice < selectedTier.price) {
+        origEl.style.display = 'block';
+        origEl.innerText = `₱${selectedTier.price.toFixed(2)}`;
+      } else {
+        origEl.style.display = 'none';
+      }
+
+      document.getElementById('selected-summary-name').innerText = selectedTier.duration + (appliedVoucher ? ` (-${appliedVoucher.discount_percent}%)` : '');
+      document.getElementById('selected-summary-price').innerText = `₱${effectivePrice.toFixed(2)}`;
+
+      const actionBtn = document.getElementById('btn-main-action');
+
+      if (!currentUser) {
+        actionBtn.className = 'btn-purchase-action insufficient';
+        actionBtn.disabled = false;
+        actionBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> SIGN IN TO PURCHASE';
+      } else if (selectedTier.stock <= 0) {
+        actionBtn.className = 'btn-purchase-action disabled';
+        actionBtn.disabled = true;
+        actionBtn.innerHTML = '<i class="fa-solid fa-ban"></i> OUT OF STOCK';
+      } else if (currentUserBalance < effectivePrice) {
+        const needed = (effectivePrice - currentUserBalance).toFixed(2);
+        actionBtn.className = 'btn-purchase-action insufficient';
+        actionBtn.disabled = false;
+        actionBtn.innerHTML = `<i class="fa-solid fa-plus"></i> TOP UP CREDITS (NEED ₱${needed} MORE)`;
+      } else {
+        actionBtn.className = 'btn-purchase-action ready';
+        actionBtn.disabled = false;
+        actionBtn.innerHTML = `<i class="fa-solid fa-bolt"></i> BUY WITH CREDITS (₱${effectivePrice.toFixed(2)})`;
+      }
+    }
+
+    async function handleMainActionClick() {
+      if (!selectedTier) return;
+
+      if (!currentUser) {
+        showToast('Sign in or create an account first.', 'info');
+        setTimeout(() => {
+          window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+        }, 450);
+        return;
+      }
+
+      if (selectedTier.stock <= 0) {
+        showToast('This tier is currently out of stock!', 'error');
+        return;
+      }
+
+      const effectivePrice = getEffectivePrice();
+      if (currentUserBalance < effectivePrice) {
+        openDepositModal(effectivePrice);
+        return;
+      }
+
+      const actionBtn = document.getElementById('btn-main-action');
+      actionBtn.disabled = true;
+      actionBtn.innerText = 'ISSUING KEY...';
+
+      try {
+        const payload = { product_id: selectedTier.id };
+        if (appliedVoucher && appliedVoucher.code) {
+          payload.voucher_code = appliedVoucher.code;
+        }
+
+        const res = await fetch('/api/purchase', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          showToast(data.error || 'Purchase failed', 'error');
+          updateActionState();
+          return;
+        }
+
+        const keyString = data.license_key || '';
+        const orderId = data.order_id || '';
+
+        const cardBox = document.getElementById('delivered-key-card-box');
+        if (cardBox) {
+          document.getElementById('card-key-display').innerText = keyString;
+          document.getElementById('card-order-id').innerText = orderId ? `#${orderId}` : '';
+          cardBox.style.display = 'block';
+        }
+
+        const modalKeyEl = document.getElementById('delivered-key-text');
+        if (modalKeyEl) modalKeyEl.innerText = keyString;
+        const modal = document.getElementById('key-success-modal');
+        if (modal) modal.classList.add('active');
+
+        clearDetailVoucher();
+        await checkUserAuth();
+        await loadProductDetailPage();
+        showToast('License key issued!', 'success');
+      } catch (err) {
+        showToast('Purchase error occurred.', 'error');
+        updateActionState();
+      }
+    }
+
+    function copyCardKey() {
+      const key = document.getElementById('card-key-display').innerText;
+      if (key) copyText(key);
+    }
+  </script>
+</body>
+</html>

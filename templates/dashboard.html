@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>Vault | Kova Store</title>
+  <link rel="icon" type="image/jpeg" href="/static/images/brand_logo.jpg">
+  <meta name="description" content="Manage your Kova wallet balance, license keys, and order ledger.">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  {% set active_page = 'dashboard' %}
+  {% include 'partials/_header.html' %}
+
+  <div class="page-wrap">
+    <div class="container">
+
+      <!-- Asymmetric Command Deck -->
+      <section class="command-deck unfold-in">
+        <div class="deck-stage tilt-3d" data-tilt-max="3.5" data-tilt-lift="-2">
+          <div>
+            <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px;" class="depth-2">
+              <img src="/static/images/brand_logo.jpg" alt="Kova Logo" style="width: 52px; height: 52px; border-radius: 10px; object-fit: cover; border: 1px solid rgba(212, 255, 51, 0.35); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65);">
+              <span style="font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.1em; color: var(--text-muted); text-transform: uppercase;">Operator License Vault</span>
+            </div>
+            <h1 class="depth-1">Welcome back, <em id="dash-welcome-user">operator</em>.</h1>
+            <p class="shop-lede">Select a duration tier, fund your balance via GCash or Maya, and pull your key straight from your personal vault below.</p>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px;" class="depth-2">
+              <a href="/products" class="btn btn-deposit btn-lg">
+                <span>Browse Catalog</span>
+                <i class="fa-solid fa-arrow-right"></i>
+              </a>
+              <a href="/tutorial" class="btn btn-withdraw btn-lg">
+                <i class="fa-solid fa-play" style="font-size: 0.75rem;"></i>
+                <span>Watch Setup</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="deck-specs-strip depth-1">
+            <div class="deck-spec-cell">
+              <div class="s-val" id="stat-registered-users">0</div>
+              <div class="s-lbl">Registered Operators</div>
+            </div>
+            <div class="deck-spec-cell">
+              <div class="s-val" id="stat-total-orders">0</div>
+              <div class="s-lbl">Keys Dispatched</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="deck-vault-stack">
+          <div class="vault-module tilt-3d unfold-in delay-1" data-tilt-max="4" data-tilt-lift="-2">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+              <span class="form-label" style="margin-bottom: 0;">Available Credits</span>
+              <div class="vault-keys-pill"><strong id="dash-total-keys-val">0</strong> keys owned</div>
+            </div>
+            <div class="vault-readout-row depth-1">
+              <div class="vault-balance-big">₱<span id="dash-balance-val">0.00</span></div>
+              <span class="chip success">GCash &middot; Maya</span>
+            </div>
+            <button class="btn cid-btn-deposit btn-block btn-lg depth-2" onclick="openDepositModal()">
+              <i class="fa-solid fa-plus"></i> Top Up Balance
+            </button>
+          </div>
+
+          <div class="referral-ticket tilt-3d unfold-in delay-2" data-tilt-max="4" data-tilt-lift="-2">
+            <div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px;">
+                <span class="chip accent">Affiliate Pass</span>
+                <span style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--success); font-weight: 700;">Earned <span id="dash-ref-earned">₱0.00</span></span>
+              </div>
+              <div style="font-family: var(--font-heading); font-size: 1.12rem; font-weight: 700; margin-bottom: 4px;">
+                Earn <span id="dash-ref-percent" style="color: var(--accent);">5%</span> credit per friend's order
+              </div>
+              <p style="font-size: 0.82rem; color: var(--text-muted);">
+                Invite code: <strong id="dash-ref-code" style="font-family: var(--font-mono); color: var(--text-white); letter-spacing: 0.06em;">------</strong>
+              </p>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="btn btn-withdraw btn-sm" style="flex: 1;" onclick="copyReferralLink()">
+                <i class="fa-regular fa-copy"></i> Copy Link
+              </button>
+              <a href="/referrals" class="btn btn-orange-outline btn-sm" style="flex: 1;">
+                Open Stats <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.68rem;"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Featured Builds -->
+      <div class="dash-section unfold-in delay-2">
+        <div class="featured-header-row">
+          <div class="featured-header-titles">
+            <div class="kicker-pill">LIVE BUILDS</div>
+            <h2 class="featured-heading">Active Lineup</h2>
+          </div>
+          <a href="/products" class="btn-all-products">
+            FULL CATALOG <i class="fa-solid fa-arrow-right" style="margin-left: 4px;"></i>
+          </a>
+        </div>
+
+        <div id="featured-products-grid" class="featured-products-grid">
+          <div class="featured-grid-skeleton">
+            <div class="featured-card-skel skeleton"></div>
+            <div class="featured-card-skel skeleton"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Asymmetric 2-Column Vault & Ledger -->
+      <div class="grid-2 unfold-in delay-3" style="align-items: start;">
+        <div id="section-orders">
+          <div class="section-title-row">
+            <div class="section-title">
+              <span class="dash-kicker-bar"></span>
+              LICENSE VAULT
+            </div>
+            <a href="/products" class="btn btn-ghost btn-sm">+ New Key</a>
+          </div>
+          <div class="card-panel" id="recent-orders-box">
+            <div class="empty-state"><p>Loading keys...</p></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-title-row">
+            <div class="section-title">
+              <span class="dash-kicker-bar"></span>
+              WALLET LEDGER
+            </div>
+          </div>
+          <div class="card-panel" id="recent-tx-box">
+            <div class="empty-state"><p>Loading ledger...</p></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  {% include 'partials/_modals.html' %}
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
